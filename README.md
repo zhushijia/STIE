@@ -7,7 +7,7 @@ STIE is a novel computational method tailored for spatial transcriptome data ana
 
 ## Dependencies on packages
 -  imagemagick - [imagemagick](http://www.imagemagick.org/script/install-source.php)
--  ImageJ - [ImageJ](http://samtools.sourceforge.net/)
+-  ImageJ/Fiji - [ImageJ/Fiji](https://imagej.net/software/fiji/downloads)
 -  R package: [magick](https://cran.r-project.org/web/packages/magick/vignettes/intro.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [doMC](https://cran.r-project.org/web/packages/doMC/); 
 
 
