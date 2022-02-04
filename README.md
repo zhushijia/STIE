@@ -17,13 +17,13 @@ http://cran.fhcrc.org/
 
 ### 2) Install the dependent R packages
 ```
-# install R package of Biostrings. 
-# try http:// if https:// URLs are not supported
-> source("https://bioconductor.org/biocLite.R")
-> biocLite("Biostrings")
+# install R package of EBImage. 
+> if (!require("BiocManager", quietly = TRUE))
+>     install.packages("BiocManager")
+>BiocManager::install("EBImage")
 
 # install packages for parallel computating
-> install.packages(c("foreach","doMC","magick"))
+> install.packages(c("magick","Seurat","foreach","doMC"))
 
 ```
 
