@@ -2,14 +2,13 @@
 Spatial Transcriptome Image and Expression integrative deconvolution enables single cell level spatial analysis
 
 ## Description
-STIE is a novel hybrid sequencing-based alternative splicing identification method, which is specially tailored for long read RNAseq correction. It was used in the paper [(E Flaherty*, S Zhu*, et. al., Neuronal impact of patient-specific aberrant NRXN1α splicing, Nature Genetics, 2019)](https://www.nature.com/articles/s41588-019-0539-z). 
+STIE is a novel computational method tailored for spatial transcriptome data analysis, which integrated both pathology image and gene expression to perform cell type convolution, enabling single cell-level spatial gene expression anlayiss.
 
 
 ## Dependencies on packages
--  STARlong & STARshort - [STAR](https://github.com/alexdobin/STAR)
--  samtools - [samtools](http://samtools.sourceforge.net/)
--  bedtools - [bedtools](http://bedtools.readthedocs.io/en/latest/)
--  R package: [Biostrings](https://bioconductor.org/packages/release/bioc/html/Biostrings.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [doMC](https://cran.r-project.org/web/packages/doMC/); [reshape](https://cran.r-project.org/web/packages/reshape/index.html)
+-  imagemagick - [imagemagick](http://www.imagemagick.org/script/install-source.php)
+-  ImageJ - [ImageJ](http://samtools.sourceforge.net/)
+-  R package: [magick](https://cran.r-project.org/web/packages/magick/vignettes/intro.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [doMC](https://cran.r-project.org/web/packages/doMC/); 
 
 
 ## Installation
@@ -25,24 +24,24 @@ http://cran.fhcrc.org/
 > biocLite("Biostrings")
 
 # install packages for parallel computating
-> install.packages(c("foreach","doMC","reshape"))
+> install.packages(c("foreach","doMC","magick"))
 
 ```
 
-### 3) Install the STAR2bSMRT R package
+### 3) Install the STIE R package
 ```
-git clone https://github.com/zhushijia/STAR2bSMRT.git
-R CMD INSTALL -l userFolder STAR2bSMRT
+git clone https://github.com/zhushijia/STIE.git
+R CMD INSTALL -l userFolder STIE
 ```
 Alternatively, use [devtools](https://github.com/hadley/devtools) package
 ```
 > install.packages("devtools")
 > library(devtools)
-> install_github("zhushijia/STAR2bSMRT")
+> install_github("zhushijia/STIE")
 ```
 
 ## Tutorial
-   See our [wiki](https://github.com/zhushijia/STAR2bSMRT/wiki)
+   See our [wiki](https://github.com/zhushijia/STIE/wiki)
 
 ## Citation
-Erin Flaherty*, Shijia Zhu*, et al., Neuronal impact of patient-specific aberrant NRXN1α splicing, Nature Genetics, 51:1679–1690, 2019. [(link)](https://www.nature.com/articles/s41588-019-0539-z)
+ [(link)](asdfads)
