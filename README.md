@@ -8,22 +8,32 @@ STIE is a novel computational method tailored for spatial transcriptome data ana
 ## Dependencies on packages
 -  imagemagick - [imagemagick (>=7.1.0)](http://www.imagemagick.org/script/install-source.php)
 -  ImageJ/Fiji - [ImageJ/Fiji](https://imagej.net/software/fiji/downloads)
--  R package: [magick](https://cran.r-project.org/web/packages/magick/vignettes/intro.html); [EBImage](https://bioconductor.org/packages/release/bioc/html/EBImage.html); [Seurat](https://satijalab.org/seurat/articles/install.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [doParallel](https://cran.r-project.org/web/packages/doParallel/index.html)
+-  R package: [magick](https://cran.r-project.org/web/packages/magick/vignettes/intro.html); [EBImage](https://bioconductor.org/packages/release/bioc/html/EBImage.html); [Seurat](https://satijalab.org/seurat/articles/install.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [CellChat](https://github.com/sqjin/CellChat); [quadprog](https://cran.r-project.org/web/packages/quadprog/index.html); 
 
 ## Installation
-### 1) Obtaining a recent version of R
+### 1) Obtaining R (>=3.6)
 Clear instructions for different version can be found here:
 http://cran.fhcrc.org/
 
 ### 2) Install the dependent R packages
 ```
-# install R package of EBImage. 
+# install R packages of computating
+> install.packages(c("foreach","doParallel","quadprog"))
+
+# install magick
+> install.packages("magick")
+
+# install EBImage
 > if (!require("BiocManager", quietly = TRUE))
 >     install.packages("BiocManager")
->BiocManager::install("EBImage")
+> BiocManager::install("EBImage")
 
-# install packages for parallel computating
-> install.packages(c("magick","Seurat","foreach","doMC"))
+# install CellChat
+> BiocManager::install("ComplexHeatmap")
+> devtools::install_github("sqjin/CellChat")
+
+# install Seurat
+> install.packages('Seurat')
 
 ```
 
