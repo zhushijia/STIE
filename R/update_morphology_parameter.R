@@ -1,3 +1,14 @@
+#' update_morphology_parameter
+#'
+#' @param PE_on_spot 
+#' @param PM_on_cell 
+#' @param cells_on_spot 
+#' @param features 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 update_morphology_parameter <- function(PE_on_spot, PM_on_cell, cells_on_spot, features)
 {
     spot_id = as.character(cells_on_spot$spot)

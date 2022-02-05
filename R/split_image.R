@@ -1,5 +1,20 @@
-
-split_image= function(image, split_dir, w=3000, h=3000, margin=100, 
+#' split_image
+#'
+#' @param image 
+#' @param split_dir 
+#' @param w 
+#' @param h 
+#' @param margin 
+#' @param x_scale 
+#' @param spot_coordinates 
+#' @param rgbscale 
+#' @param grayscale 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+split_image <- function(image, split_dir, w=3000, h=3000, margin=100, 
                       x_scale=1, spot_coordinates=NULL, 
                       rgbscale=FALSE, grayscale=FALSE) {
     

@@ -1,0 +1,390 @@
+---
+title: 'GIGSEA: Genotype Imputed Gene Set Enrichment Analysis'
+author: |
+  | Shijia Zhu
+  | Department of Genetics and Genomic Sciences and Icahn Institute for Genomics and Multiscale Biology, Icahn School of Medicine at Mount Sinai, New York, NY 10029, USA
+date: "August 28, 2017"
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{GIGSEA: Genotype Imputed Gene Set Enrichment Analysis}
+  %\VignetteEncoding{UTF-8}
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  html_document:
+    highlight: tango
+    theme: united
+    toc: yes
+    toc_depth: 3
+---
+
+## Abstract
+We presented the Genotype Imputed Gene Set Enrichment Analysis (GIGSEA), a 
+novel method that uses GWAS-and-eQTL-imputed differential gene expression to 
+interrogate gene set enrichment for the trait-associated SNPs. By incorporating 
+eQTL from large gene expression studies, e.g. GTEx, GIGSEA appropriately 
+addresses such challenges for SNP enrichment as gene size, gene boundary, 
+andmultiple-marker regulation. The weighted linear regression model, taking as 
+weights both imputation accuracy and model completeness, was used to test the 
+enrichment, properly adjusting the bias due to redundancy in different gene 
+sets. The permutation test, furthermore, is used to evaluate the significance 
+of enrichment, whose efficiency can be largely elevated by expressing the 
+computational intensive part in terms of large matrix operation. We have shown 
+the appropriate type I error rates for GIGSEA (<5%), and the preliminary 
+results also demonstrate its good performance to uncover the real biological 
+signal. 
+
+
+## 1. Install ImageMagick
+In GIGSEA, the gene sets are saved as matrices. Such matrices are largely 
+sparse, so, in order to save space, we used the functions provided by the R 
+package "Matrix" to build the sparse matrices and pre-saved into the GIGSEA 
+package. GIGSEA uses the local fdr, implemented by the R package 
+"locfdr", to adjust for multiple hypothesis testing. In addition, it requires 
+the R package [GIGSEAdata](https://github.com/zhushijia/GIGSEAdata), which is 
+a collection of gene sets.
+
+```{r}
+First, we need to export two variables to let R know the lib of ImageMagick (have not got a chance to test if both are necessary):
+export PATH=$PATH:XXX/ImageMagick-7.1.0/lib/pkgconfig:XXX/ImageMagick-7.1.0/lib
+export PKG_CONFIG_PATH=XXX/ImageMagick-7.1.0/lib/pkgconfig:XXX/ImageMagick-7.1.0/lib
+ 
+Even with those specified, I still met with two errors:
+1. there is no "Magick::ReadOptions.quiet" in Magick++;
+2. cannot locate libMagick++-6.Q16HDRI.so.5;
+ 
+#1: I am guessing, it is because of the incompatibility between the latest magick ver2.7 in R (automatically installed by "install.packages") and imageMagick (ver 6.8 or 6.9) on bioHPC. So, I upgraded imageMagick to ver 7.1 via installing it locally.
+ 
+#2: given #1, I can locate libMagick++-7.Q16HDRI.so.5 from my own installation.
+To make R know it, I need to export another variable LD_LIBRARY_PATH as following:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:XXX/ImageMagick-7.1.0/lib
+
+```
+
+## 2. Install EBImage
+GIGSEA first uses MetaXcan (also called "s-predixcan") to impute 
+trait-associated differential gene expression from both GWAS summary and eQTL 
+database with LD structure adjusted, and next, builds a weighted regression 
+model to perfrom gene set enrichment analysis. In user's convenience, we 
+combine these procedures together into one function `runGIGSEA()`, which writes 
+the enrichment test results at the local directory. Users only need to provide 
+their GWAS summary data, and specify the paths to the MetaXcan.py file, the 
+eQTL database (e.g. GTex and DGN) and the reference popultation (e.g. 1000 
+Genome). 
+
+```{r}
+ if (!require("BiocManager", quietly = TRUE))
+     install.packages("BiocManager")
+ BiocManager::install("EBImage")
+```
+
+
+***In case that users had neither installed MetaXcan nor run the online 
+MetaXcan, an example of MetaXcan-imputed differential gene expression is given 
+as follows. Users can use it to test the codes of GIGSEA step by step.
+
+## 3. One example of MetaXcan output
+MetaXcan integrates GWAS summary result with eQTL information to map 
+trait-associated genes. See <https://github.com/hakyimlab/MetaXcan>. It 
+provides a novel way to aggregate the multiple markers within each gene, 
+address the long-range regulation, and adjust bias from gene boundaries and 
+gene size. We use MetaXcan to impute the complex-trait-associated differential 
+gene expression from eQTL summary and GWAS summary datasets. MetaXcan imputes 
+~10,000 genes with high quality prediction in most tissues. The training 
+dataset for the expression prediction or 1000 Genomes was used as reference 
+population to address the LD structure (covariance) of markers. Users can also 
+specify their own genotype data to address the LD structure. The eQTL summary 
+data was pre-calculated from large gene expression studies, such as the 
+Genotype-Tissue Expression Project (GTEx; a comprehensive set of tissues from 
+of ~20,000 samples) (Lonsdale, et al., 2013) and Depression Genes and Networks 
+(DGN; 922 whole-blood samples) (Battle, et al., 2014). So, users only need to 
+provide the GWAS summary data to estimate the genetically regulated gene 
+expression. 
+
+We take as an example the cardiovascular disease (CVD) GWAS, CARDIoGRAMplusC4D 
+(60,801 cases, 123,504 controls and 9.4M SNPs) (Nikpay, et al., 2015). The 
+summary data is downloaded from <www.cardiogramplusc4d.org/data-downloads/>. We 
+run the MetaXcan on it based on DGN eQTL database and 1000 Genomes as 
+covariance. 
+
+```{r}
+data(heart.metaXcan)
+head(heart.metaXcan)
+```
+
+Each row is a gene's association result:
+
+- `gene`: a gene's id
+- `gene_name`: a gene's name
+- `zscore`: MetaXcan's association result for the gene
+- `effect_size`: MetaXcan's association effect size for the gene
+- `pvalue`: P-value of the aforementioned statistic
+- `pred_perf_r2`: R2 of transcriptome prediction model's correlation to gene's 
+measured transcriptome
+- `pred_perf_pval`: pval of transcriptome prediction model's correlation to 
+gene's measured transcriptome
+- `pred_perf_qval`: qval of transcriptome prediction model's correlation to 
+gene's measured transcriptome
+- `n_snps_used`: number of snps from GWAS that got used in MetaXcan analysis
+- `n_snps_in_cov`: number of snps in the covariance matrix
+- `n_snps_in_model`: number of snps in the prediction model
+- `var_g`: variance of the gene expression
+
+
+We use the linear regression model to build a threshold-free gene set 
+enrichment test, checking whether genes are significantly differentially 
+expressed in a given gene set, as compared to the background. In the regression 
+model, we regress the imputed Z-score of differential gene expression on the 
+gene sets. However, the gene expression cannot be perfectly predicted using 
+genotype, which is indicated by the prediction R^2, and moreover, not all SNPs 
+in the prediction model are in user’s dataset. In order to take into account 
+such two factors, we use as weights the multiplication of prediction R^2 and 
+fraction of imputation-used SNPs, building a weighted linear regression model. 
+
+```{r}
+gene = heart.metaXcan$gene_name
+# extract the imputed Z-score of differential gene expression, which follows 
+# the normal distribution
+fc <- heart.metaXcan$zscore
+# use the prediction R^2 and fraction of imputation-used SNPs as weights 
+usedFrac <- heart.metaXcan$n_snps_used / heart.metaXcan$n_snps_in_model
+r2 <- heart.metaXcan$pred_perf_r2
+weights <- usedFrac*r2
+# build a new data frame for the following weighted linear regression-based 
+# enrichment analysis
+data <- data.frame(gene,fc,weights)
+head(data)
+```
+
+
+## 4. Load data of gene sets
+GIGSEA is built on the weighted linear regression model, so it permits both 
+discrete-valued and continuous-valued gene sets. We already incorporated 
+several gene sets into the GIGSEA package, including:
+
+1) **discrete-valued gene sets**:
+- `MSigDB.KEGG.Pathway`: Gene sets derived from the KEGG pathway database. It 
+comprises 186 pathways (column) and 5267 genes (row). 
+See c2.cp.kegg.v6.0.symbols.gmt.txt at
+<http://software.broadinstitute.org/gsea/msigdb/collections.jsp#C2> 
+- `MSigDB.TF`: Gene sets that share upstream cis-regulatory motifs which can 
+function as potential transcription factor binding sites. It comprises 615 TFs 
+(column) and 12774 genes (row). See c3.tft.v6.0.symbols.gmt.txt at
+<http://software.broadinstitute.org/gsea/msigdb/collections.jsp#C3> 
+- `MSigDB.miRNA`: Gene sets that contain genes sharing putative target sites 
+(seed matches) of human mature miRNA in their 3'-UTRs. It comprises 221 miRNAs 
+(column) and 7444 genes (row). See c3.mir.v6.0.symbols.gmt.txt at
+<http://software.broadinstitute.org/gsea/msigdb/collections.jsp#C3>
+- `org.Hs.eg.GO`(require [GIGSEAdata](https://github.com/zhushijia/GIGSEAdata)): 
+Gene sets that contain genes annotated by the same Gene Ontology (GO) 
+term. For each GO term, we not only incorporate its own gene sets, but also 
+incorporate the gene sets belonging to its offsprings. See the "database GO.db" 
+in R.  
+
+2) **continuous-valued gene sets (require R package [GIGSEAdata](https://github.com/zhushijia/GIGSEAdata))**:
+- `Fantom5.TF`: The human transcript promoter locations were obtained from 
+Fantom5. Based on the promoter locations, the tool MotEvo was used to predict 
+the human transcriptional factor (TF) target sites. The dataset contains 500 
+Positional Weight Matrices (PWM) and 21964 genes. For each PWM, there is a list 
+of associated human TFs, ordered by percent identity of TFs known to bind sites 
+of the PWM. The list of associations was checked manually. The entire set of 
+PWMs and mapping to associated TFs is available from the SwissRegulon website
+<http://www.swissregulon.unibas.ch>.
+- `TargetScan.miRNA`: Gene sets of predicted human miRNA target sites were 
+downloaded from TargetScan. TargetScan groups miRNAs that have identical 
+subsequences at positions 2 through 8 of the miRNA, i.e. the 2-7 seed region 
+plus the 8th nucleotide, and provides predictions for each such seed motif. 
+TargetScan covers 87 human miRNA seed motifs in total. It provides a score for 
+each seed motif and each RefSeq transcript, called preferential conservation 
+scoring (aggregate Pct), which shows consistently high performance in various 
+benchmark tests. To obtain a site count associated with each gene, we average 
+the TargetScan Pct scores of all RefSeq transcripts associated with each gene. 
+It comprises 87 miRNA seed motifs and 9861 genes. 
+See <http://www.targetscan.org>.
+
+
+### 4.1 Discrete-valued gene sets:
+We first show an example of discrete-valued gene set: MSigDB.KEGG.Pathway, 
+where the row represents the gene, and the column represents the pathway. Each 
+entry takes discrete values of 0 or 1, where 1 represents the gene (row) 
+belongs to the pathway (column), and otherwise, not.  
+```{r}
+# load data
+data(MSigDB.KEGG.Pathway)
+# MSigDB.KEGG.Pathway is a list comprising two components: net and annot
+class(MSigDB.KEGG.Pathway)
+names(MSigDB.KEGG.Pathway)
+dim(MSigDB.KEGG.Pathway$net)
+# the column is the pathway and the row is the gene
+head(colnames(MSigDB.KEGG.Pathway$net))
+head(rownames(MSigDB.KEGG.Pathway$net))
+# the annotation of the pathway
+head(MSigDB.KEGG.Pathway$annot)
+# the net takes discrete values of 0 or 1
+head(MSigDB.KEGG.Pathway$net[,1:30])
+```
+
+
+### 4.2 Continuous-valued gene sets:
+Followed is an example of continuous-valued gene set: TargetScan.miRNA, where 
+the row represents the gene, and the column represents the miRNA. Each entry 
+takes continuous values of pct, representing the binding affinity of miRNA on 
+the gene 3' UTR.   
+```{r}
+# TargetScan.miRNA requires the "GIGSEAdata" package
+library(GIGSEAdata)
+# load data
+data(TargetScan.miRNA)
+# TargetScan.miRNA is a list comprising two components: net and annot
+class(TargetScan.miRNA)
+names(TargetScan.miRNA)
+dim(TargetScan.miRNA$net)
+# the column is the miRNA and the row is the gene
+head(colnames(TargetScan.miRNA$net))
+head(rownames(TargetScan.miRNA$net))
+# the annotation of the miRNA
+head(TargetScan.miRNA$annot)
+# the net takes continuous values
+head(TargetScan.miRNA$net[,1:20])
+```
+
+### 4.3 User self-defined gene set
+In adition to the above predefined gene sets, users can also specify their own 
+gene set. Here, we take as an example the CREEDS <amp.pharm.mssm.edu/CREEDS/>. 
+It is a manually curated database of gene signatures of single drug 
+perturbations. For each drug perturbation, it lists both up-regulated and 
+down-regulated gene sets. In the following example, we transform the gmt format 
+file into a sparse matrix, where for each drug perturbation, the up-regulated 
+genes take the value of 1, the down-regulated genes take the value of -1, and 
+the others take the value of 0. 
+```{r}
+# downlaod the gmt file
+gmt <- readLines( paste0('http://amp.pharm.mssm.edu/CREEDS/download/',
+                        'single_drug_perturbations-v1.0.gmt') )
+# obtain the index of up-regulated and down-regulated gene sets
+index_up <- grep('-up',gmt)
+index_down <- grep('-dn',gmt)
+# transform the gmt file into gene sets. The gene set is a data frame, 
+# comprising three vectors: term (here is drug), geneset (a gene symbol list 
+# separated by comma), and value (1 and -1 separated by comma) 
+gff_up <- gmt2geneSet( gmt[index_up] , termCol=c(1,2) , singleValue = 1 )
+gff_down <- gmt2geneSet( gmt[index_down] , termCol=c(1,2) , singleValue = -1 )
+
+# as following, combine the up and down-regulated gene sets together, 
+# and use value of 1 and -1 to indicate their direction:
+# extract the drug names
+term_up <- sapply( gff_up$term , function(x) gsub('-up','',x) )
+term_down <- sapply( gff_down$term , function(x) gsub('-dn','',x) )
+all(term_up==term_down)
+# combine up and down-regulated gene names for each drug perturbation
+geneset <- sapply( 1:nrow(gff_up) , function(i) 
+  paste(gff_up$geneset[i],gff_down$geneset[i],sep=',') )
+# use 1 and -1 to indicate direction of up-regulated and down-regulated genes
+value <- sapply( 1:nrow(gff_up) , function(i) 
+  paste(gff_up$value[i],gff_down$value[i],sep=',') )
+# transform the gene set into matrix, where the row represents the gene, 
+# the column represents the drug perturbation, and each entry takes values of 
+# 1 and -1
+net1 <- geneSet2Net( term=term_up , geneset=geneset , value=value )
+# transform the gene set into sparse matrix, where the row represents the gene,
+# the column represents the drug perturbation, and each entry takes values of 
+# 1 and -1
+net2 <- geneSet2sparseMatrix( term=term_up , geneset=geneset , value=value )
+tail(net1[,1:30])
+tail(net2[,1:30])
+# the size of sparse matrix is much smaller than the matrix
+format( object.size(net1), units = "auto")
+format( object.size(net2), units = "auto")
+```
+
+
+## 5. Gene set enrichment analysis
+### 5.1 GSEA using weighted simple linear regression model
+After obtaining the imputed differential gene expression and the weights, we 
+build the weighted linear regression model to investigate the gene set 
+enrichment. Permutation test was used to adjust the p values of the regression 
+coefficients. We repeatedly shuffle the differential gene expression to obtain 
+a global null distribution of no associated gene sets and calculate the 
+empirical p value for each gene set. For the Single Gene Set Erichment Analysis 
+(SGSEA), especially with many gene sets tested, a large number of weighted 
+simple linear regression model would be interrogated. To improve the 
+efficiency, we use weighted Pearson correlation to rank the significance, which
+uses the same hypothesis statistic with the weighted linear regression model. 
+Furthermore, we expressed it in terms of large matrix inner product, 
+substantially improving the time efficiency. 
+
+```{r}
+# take MSigDB.KEGG.Pathway as an example
+net <- MSigDB.KEGG.Pathway$net
+# intersect the permuted genes with the gene sets of interest
+data2 <- orderedIntersect( x = data[,c("fc","weights")] , by.x = data$gene , 
+                           by.y = rownames(net) )
+net2 <- orderedIntersect( x = net , by.x = rownames(net) , by.y = data$gene  )
+all( rownames(net2) == rownames(data2) )
+# the SGSEA.res1 uses the weighted simple linear regression model, while 
+# SGSEA.res2 used the weighted Pearson correlation. The latter one takes 
+# substantially less time. 
+system.time( SGSEA.res1 <- permutationSimpleLm( fc=data2$fc , net=net2 , 
+                              weights=data2$weights , num=100 ) )
+system.time( SGSEA.res2 <- permutationSimpleLmMatrix( fc=data2$fc , 
+                              net=net2 , weights=data2$weights , num=100 ) )
+head(SGSEA.res2)
+```
+
+### 5.2 GSEA using weighted multiple linear regression model
+A gene may function in multiple ways and thus appear multiple times in 
+functional gene sets. In spite of reflecting the crosstalk between gene sets, 
+such overlap may make the results of gene set analysis more difficult to 
+interpret.
+To address the redundancy existing among gene sets, we build a weighted 
+multiple linear regression model, taking into account all gene sets in one 
+model. The redundancy of one gene set can be adjusted by considering all other 
+gene sets as covariates. To improve the time efficiency, we also use matrix 
+operation to solve the weighted multiple regression model.   
+
+```{r}
+# MGSEA.res1 uses the weighted multiple linear regression model 
+system.time( MGSEA.res1 <- permutationMultipleLm( fc=data2$fc , net=net2 , 
+                              weights=data2$weights , num=1000 ) )
+# MGSEA.res2 used the matrix solution
+system.time( MGSEA.res2 <- permutationMultipleLmMatrix( fc=data2$fc , 
+                              net=net2 , weights=data2$weights , num=1000 ) )
+head(MGSEA.res2)
+```
+
+### 5.3 One-step weightedGSEA
+In user's convenience, we combine the above procedures together into one 
+function `weightedGSEA()`. Based on the imputed differential gene expression, 
+`weightedGSEA()` checks multiple classes of gene sets simultaneously and writes 
+out the enrichment analysis results. Users need to provide the same data with 
+above, and specify the columns of gene names (geneCol), imputed differential 
+gene expression (fcCol), and weights (weightCol). Additionally, users specify 
+the gene sets of interest (geneSet), the times of permutation (permutationNum) 
+and the directory for saving the results (outputDir). By default, we only do 
+SGSEA. Users can specify `MGSEAthres` to perform MGMEA for those with less than 
+`MGSEAthres` gene sets. 
+
+```{r}
+# import packages and prepare data as above
+library(GIGSEA)
+
+# load database of Fantom5.TF, TargetScan.miRNA and org.Hs.eg.GO
+library(GIGSEAdata)
+
+# prepare the dataset
+data(heart.metaXcan)
+gene = heart.metaXcan$gene_name
+fc <- heart.metaXcan$zscore
+usedFrac <- heart.metaXcan$n_snps_used / heart.metaXcan$n_snps_in_cov
+r2 <- heart.metaXcan$pred_perf_r2
+weights <- usedFrac*r2
+data <- data.frame(gene,fc,weights)
+
+# run one-step GIGSEA 
+#weightedGSEA(data, geneCol='gene', fcCol='fc', weightCol= 'weights',
+#geneSet=c("MSigDB.KEGG.Pathway","Fantom5.TF","TargetScan.miRNA","org.Hs.eg.GO"), 
+#permutationNum=10000, outputDir="./GIGSEA" )
+
+#dir("./GIGSEA")
+```

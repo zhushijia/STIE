@@ -1,3 +1,12 @@
+#' calculate_spot_radius
+#'
+#' @param spot_coordinates 
+#' @param fct 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 calculate_spot_radius <- function(spot_coordinates, fct)
 {
     distMat <- dist(spot_coordinates[, c("pixel_x", "pixel_y")])

@@ -1,18 +1,27 @@
-
-library(readbitmap)
-
-library(grid)
-library(RColorBrewer)
-library(cowplot)
-
-library(Seurat)
-library(hdf5r)
-library(Matrix)
-
-library(data.table)
-
-
-load_STdata = function( sample_names, sample_dir, umi_cutoff=0, is_normalized=TRUE ) {
+#' load_STdata
+#'
+#' @param sample_names 
+#' @param sample_dir 
+#' @param umi_cutoff 
+#' @param is_normalized 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+load_STdata <- function( sample_names, sample_dir, umi_cutoff=0, is_normalized=TRUE ) {
+    
+    library(readbitmap)
+    
+    library(grid)
+    library(RColorBrewer)
+    library(cowplot)
+    
+    library(Seurat)
+    library(hdf5r)
+    library(Matrix)
+    
+    library(data.table)
     
     image_paths <- paste( sample_dir, "outs/spatial/tissue_lowres_image.png", sep="/")
     scalefactor_paths <- paste( sample_dir, "outs/spatial/scalefactors_json.json", sep="/")

@@ -1,5 +1,14 @@
-
-read_image= function(image, croparea=NULL, x_scale=1 ) {
+#' read_image
+#'
+#' @param image 
+#' @param croparea 
+#' @param x_scale 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+read_image <- function(image, croparea=NULL, x_scale=1 ) {
     
     cat("Reading", image, "...\n")
     

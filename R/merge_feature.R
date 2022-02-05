@@ -1,5 +1,12 @@
-
-
+#' merge_feature
+#'
+#' @param feature_dir 
+#' @param tag 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 merge_feature <- function( feature_dir, tag=NULL )
 {
   

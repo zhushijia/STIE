@@ -1,5 +1,27 @@
-
-plot_sub_image= function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
+#' plot_sub_image
+#'
+#' @param im 
+#' @param im_path 
+#' @param w 
+#' @param h 
+#' @param xoff 
+#' @param yoff 
+#' @param x_scale 
+#' @param plot_spot 
+#' @param fct 
+#' @param spot_coordinates 
+#' @param spot_types 
+#' @param plot_cell 
+#' @param contour 
+#' @param cell_types 
+#' @param axis_tick 
+#' @param axis_col 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_sub_image <- function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
                          plot_spot=F, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
                          plot_cell=T, contour, cell_types, axis_tick=0, axis_col='grey' ) {
     

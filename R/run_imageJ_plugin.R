@@ -1,4 +1,15 @@
-
+#' run_imageJ_plugin
+#'
+#' @param imageJ 
+#' @param plugin_macro 
+#' @param split_image_dir 
+#' @param feature_dir 
+#' @param pattern 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 run_imageJ_plugin <- function( imageJ, plugin_macro, split_image_dir, feature_dir=split_image_dir, pattern="jpg$" )
 {
     
