@@ -4,7 +4,7 @@
 \alias{run_imageJ_plugin}
 \title{run_imageJ_plugin}
 \usage{
-run_imageJ_plugin(imageJ, plugin_macro, split_image_dir,
+run_imageJ_plugin(imageJ, plugin_macro = NULL, split_image_dir,
   feature_dir = split_image_dir, pattern = "jpg$")
 }
 \arguments{

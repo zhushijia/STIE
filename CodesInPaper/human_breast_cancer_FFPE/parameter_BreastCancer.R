@@ -93,18 +93,19 @@ spot_coordinates <- data.frame( spot_coordinates,
                                 pixel_x=spot_coordinates$imagecol*args$x_scale,
                                 pixel_y=spot_coordinates$imagerow*args$x_scale )
 
-spot_coordinates <- subset(spot_coordinates, barcode%in%as.character(bcs$barcode) )
+spot_radius <- calculate_spot_radius(spot_coordinates, fct)
+
 
 ############################################################
 ########## load 10X transcriptome
 ############################################################
 cat("load 10X transcriptome...\n")
 
-STdata = load_STdata( "Visium_FFPE_Human_Breast_Cancer", spaceranger_count_dir, umi_cutoff=0, is_normalized=FALSE ) 
+STdata = load_STdata( "Visium_FFPE_Human_Breast_Cancer", args$spaceranger_count_dir, umi_cutoff=0, is_normalized=FALSE ) 
 bcs <- STdata$bcs_merge
 count = STdata$matrix[[1]]
 
-spot_radius <- calculate_spot_radius(spot_coordinates, fct)
+spot_coordinates <- subset(spot_coordinates, barcode%in%as.character(bcs$barcode) )
 ST_expr = count[match( as.character(spot_coordinates$barcode), rownames(count) ),]
 
 
