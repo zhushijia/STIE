@@ -11,18 +11,6 @@
 #' @examples
 load_STdata <- function( sample_names, sample_dir, umi_cutoff=0, is_normalized=TRUE ) {
     
-    library(readbitmap)
-    
-    library(grid)
-    library(RColorBrewer)
-    library(cowplot)
-    
-    library(Seurat)
-    library(hdf5r)
-    library(Matrix)
-    
-    library(data.table)
-    
     image_paths <- paste( sample_dir, "outs/spatial/tissue_lowres_image.png", sep="/")
     scalefactor_paths <- paste( sample_dir, "outs/spatial/scalefactors_json.json", sep="/")
     tissue_paths <- paste( sample_dir, "outs/spatial/tissue_positions_list.csv", sep="/")

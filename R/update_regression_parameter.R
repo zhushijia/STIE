@@ -12,10 +12,37 @@
 #' @export
 #'
 #' @examples
+#' 
+#' 
 update_expression_regression_parameter <- function( Signature, Expr_on_spot_i, 
                                                     PE_on_spot_i, PM_on_spot_i, 
                                                     lambda = c(0,10^c(0:7)), scaled=T, 
                                                     kfold=10 ) {
+    
+    
+    solveOLS2 <- function(Signature, Expr_on_spot_i, 
+                          PE_on_spot_i, PM_on_spot_i, 
+                          lambda, scaled=T) {
+        
+        # Signature is the matrix of cell type signature
+        # Expr_on_spot_i is the gene expression of i-th spot
+        # PE_on_spot_i is the current estimation of regression coefficients
+        # PM_on_spot_i is the probability of morphology for cell type
+        # lambda is the langurange multiplier
+        
+        t <- ncol(Signature)
+        I <- diag(t)
+        
+        D <- t(Signature)%*%Signature + lambda*I
+        d <- t(Signature)%*%Expr_on_spot_i + lambda*sum(PE_on_spot_i)*I%*%PM_on_spot_i
+        A <- I
+        bzero <- c(rep(0,t))
+        solution <- solve.QP(D,d,A)$solution
+        names(solution) <- colnames(Signature)
+        if(scaled) solution <- solution/sum(solution)
+        solution
+    }
+    
     
     if( length(lambda)==1 ) {
         
@@ -64,37 +91,4 @@ update_expression_regression_parameter <- function( Signature, Expr_on_spot_i,
     
 }
 
-solveOLS <- function(S, B, scaled=T) {
-    D<-t(S)%*%S
-    d<-t(S)%*%B
-    A<-cbind(diag(dim(S)[2]))
-    bzero<-c(rep(0,dim(S)[2]))
-    solution<-solve.QP(D,d,A,bzero)$solution
-    names(solution)<-colnames(S)
-    solution = abs(solution)
-    if(scaled) solution = solution/sum(solution)
-    return(solution)
-}
 
-solveOLS2 <- function(Signature, Expr_on_spot_i, 
-                      PE_on_spot_i, PM_on_spot_i, 
-                      lambda, scaled=T) {
-    
-    # Signature is the matrix of cell type signature
-    # Expr_on_spot_i is the gene expression of i-th spot
-    # PE_on_spot_i is the current estimation of regression coefficients
-    # PM_on_spot_i is the probability of morphology for cell type
-    # lambda is the langurange multiplier
-    
-    t <- ncol(Signature)
-    I <- diag(t)
-    
-    D <- t(Signature)%*%Signature + lambda*I
-    d <- t(Signature)%*%Expr_on_spot_i + lambda*sum(PE_on_spot_i)*I%*%PM_on_spot_i
-    A <- I
-    bzero <- c(rep(0,t))
-    solution <- solve.QP(D,d,A)$solution
-    names(solution) <- colnames(Signature)
-    if(scaled) solution <- solution/sum(solution)
-    solution
-}

@@ -70,7 +70,7 @@ plot_sub_image <- function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0
     if(plot_cell) 
     {
         plot_cell_contour(contour, cell_coordinates, w, h, xoff, yoff, x_scale, cell_cols)
-        if(1) plot.new()
+        if(0) plot.new()
         legend('topright', legend=uni_celltypes, pch=1, col=col )
     }
     

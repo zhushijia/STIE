@@ -10,7 +10,7 @@
 #' @export
 #'
 #' @examples
-run_imageJ_plugin <- function( imageJ, plugin_macro, split_image_dir, feature_dir=split_image_dir, pattern="jpg$" )
+run_imageJ_plugin <- function( imageJ, plugin_macro=NULL, split_image_dir, feature_dir=split_image_dir, pattern="jpg$" )
 {
     
     #imageJ = "/archive/SCCC/Hoshida_lab/s184554/Code/github/ImageJ/Fiji.app/ImageJ-linux64" 
@@ -18,6 +18,12 @@ run_imageJ_plugin <- function( imageJ, plugin_macro, split_image_dir, feature_di
     
     #split_image_dir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/MouseLiverNatComms/sample_1/img/high_resolution/CN73_Liver_HE_C1_0.1_split_images"
 
+    if( is.null(plugin_macro) )
+    {
+        STIE.dir = system.file(package = "STIE")
+        plugin_macro = paste0(STIE.dir , "/data/DeepImageJ_plugin_multi_organ_3000_3000.fiji.ijm")
+    }
+    
     setwd(split_image_dir)
     
     images <- paste0( split_image_dir, "/", list.files(split_image_dir,pattern=pattern) )
