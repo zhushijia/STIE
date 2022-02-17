@@ -12,12 +12,22 @@
 #' 
 #' 
 #' 
-get_cellchat <- function(STIE_result, 
+get_cellchat <- function(STIE_result, ST_expr, 
                          database=c("human","mouse"), 
                          db_category=c("Secreted Signaling"), 
                          DEG_pthres=1e-5)
 {
     # https://github.com/sqjin/CellChat
+    # http://www.cellchat.org/
+    
+    if(0)
+    {
+        STIE_result = result
+        database="human"
+        db_category=NULL
+        DEG_pthres=1e-10  
+    }
+    
     
     library(quadprog)
     library(CellChat)
@@ -119,10 +129,12 @@ get_cellchat <- function(STIE_result,
     var.features = list(features.info=features.info,
                         features = features)
     
+    reps = 1000
     data.input = Signature3[features,]
     meta = data.frame(cluster=colnames(Signature3),labels=colnames(Signature3))
-    data.input = do.call(cbind, lapply(1:2, function(i) data.input ) )
-    meta = do.call(rbind, lapply(1:2, function(i) meta ) )
+    data.input = do.call(cbind, lapply(1:reps, function(i) data.input ) )
+    colnames(data.input) = NULL
+    meta = do.call(rbind, lapply(1:reps, function(i) meta ) )
     
     cellchat <- createCellChat(object = data.input, meta = meta, group.by = "labels")
     

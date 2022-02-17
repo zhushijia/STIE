@@ -4,7 +4,7 @@
 \alias{get_cellchat}
 \title{get_cellchat}
 \usage{
-get_cellchat(STIE_result, database = c("human", "mouse"),
+get_cellchat(STIE_result, ST_expr, database = c("human", "mouse"),
   db_category = c("Secreted Signaling"), DEG_pthres = 1e-05)
 }
 \arguments{
