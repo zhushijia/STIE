@@ -197,7 +197,7 @@ cell_types = result$cell_types
 contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
 
 #### selectec region
-plot_sub_image(im=im, w=6000, h=5000, xoff=8000, yoff=10500, 
+plot_sub_image(im=im, w=3000, h=3000, xoff=10000, yoff=10000, 
                x_scale=1, spot_coordinates=spot_coordinates, 
                contour=contour2, cell_types=cell_types, plot_spot=F, plot_cell=T  )
 
