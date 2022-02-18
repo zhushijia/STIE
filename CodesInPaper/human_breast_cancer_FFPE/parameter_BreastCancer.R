@@ -199,6 +199,7 @@ contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell
 
 
 #### selectec region
+<<<<<<< HEAD
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
 
 pdf("BreastCancer_result.pdf")
@@ -207,6 +208,8 @@ plot_sub_image(im=im, w=2000, h=2000, xoff=10000, yoff=10500,
                x_scale=1, spot_coordinates=spot_coordinates, 
                contour=contour2, cell_types=cell_types, color_use=colors, plot_spot=F, plot_cell=T  )
 
+=======
+>>>>>>> 6451936198c161af7c4a0960bf737d936e7c11d6
 plot_sub_image(im=im, w=3000, h=3000, xoff=10000, yoff=10000, 
                x_scale=1, spot_coordinates=spot_coordinates, 
                contour=contour2, cell_types=cell_types, color_use=colors, plot_spot=F, plot_cell=T  )
