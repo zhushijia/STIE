@@ -19,3 +19,7 @@ load_STdata(sample_names, sample_dir, umi_cutoff = 0,
 \description{
 load_STdata
 }
+\examples{
+
+
+}

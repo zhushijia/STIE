@@ -9,6 +9,8 @@
 #' @export
 #'
 #' @examples
+#' 
+#' 
 load_STdata <- function( sample_names, sample_dir, umi_cutoff=0, is_normalized=TRUE ) {
     
     image_paths <- paste( sample_dir, "outs/spatial/tissue_lowres_image.png", sep="/")
@@ -70,7 +72,7 @@ load_STdata <- function( sample_names, sample_dir, umi_cutoff=0, is_normalized=T
     
     matrix <- list()
     for (i in 1:length(sample_names)) {
-        matrix[[i]] <- as.data.frame(t(Read10X_h5(matrix_paths[i])))
+        matrix[[i]] <- as.data.frame(t(as.matrix(Read10X_h5(matrix_paths[i]))))
     }
     
     umi_sum <- list() 

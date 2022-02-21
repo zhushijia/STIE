@@ -36,6 +36,7 @@ args$spotfile = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X
 
 args$spaceranger_count_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/Visium_FFPE_Human_Breast_Cancer"
 scalefactor_paths <- paste( args$spaceranger_count_dir, "outs/spatial/scalefactors_json.json", sep="/")
+matrix_paths <- paste( args$spaceranger_count_dir, "outs/filtered_feature_bc_matrix.h5", sep="/")
 
 scales <- rjson::fromJSON(file = scalefactor_paths)
 args$x_scale = scales$tissue_lowres_scalef
@@ -101,13 +102,10 @@ spot_radius <- calculate_spot_radius(spot_coordinates, fct)
 ############################################################
 cat("load 10X transcriptome...\n")
 
-STdata = load_STdata( "Visium_FFPE_Human_Breast_Cancer", args$spaceranger_count_dir, umi_cutoff=0, is_normalized=FALSE ) 
-bcs <- STdata$bcs_merge
-count = STdata$matrix[[1]]
+count <- as.data.frame(t(Read10X_h5(matrix_paths)))
 
-spot_coordinates <- subset(spot_coordinates, barcode%in%as.character(bcs$barcode) )
+spot_coordinates <- subset(spot_coordinates, barcode%in%rownames(count) )
 ST_expr = count[match( as.character(spot_coordinates$barcode), rownames(count) ),]
-
 
 ############################################################
 ######## modes
@@ -197,6 +195,25 @@ cell_types = result$cell_types
 contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
 
 
+##########################################################################################
+######## morphology features
+##########################################################################################
+library(vioplot)
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+
+pdf("BreastCancer_morphology_features.pdf")
+
+levels = c("Bcells", "Tcells", "Plasmablasts","CancerEpithelial", "NormalEpithelial", "CAFs", "Endothelial" )
+levels_col = c( "steelblue", "#4DAF4A", "darkorange", "black", "yellow", "darkred", "cyan")
+fs = c("Area", "Round", "Solidity","IntDen","Feret", "Circ.", "Skew", "Kurt", "Eccentricity")
+par( mfrow=c(3,3) )
+lapply( fs, function(f) {
+    x = split( cells_on_spot[,f], result$cell_types )
+    group = factor( result$cell_types, levels=levels)
+    vioplot(cells_on_spot[,f]~group, col=levels_col, las=3,xlab=NULL,ylab=f)
+})
+
+dev.off()
 
 #### selectec region
 
@@ -220,3 +237,6 @@ plot_sub_image(im=im,
                axis_tick=0, axis_col='grey'  )
 
 dev.off()
+
+
+
