@@ -2,6 +2,7 @@
 #'
 #' @param im 
 #' @param im_path 
+#' @param image_transparency 
 #' @param w 
 #' @param h 
 #' @param xoff 
@@ -14,6 +15,8 @@
 #' @param plot_cell 
 #' @param contour 
 #' @param cell_types 
+#' @param cell_types_of_interest 
+#' @param color_use 
 #' @param axis_tick 
 #' @param axis_col 
 #'
@@ -21,9 +24,12 @@
 #' @export
 #'
 #' @examples
-plot_sub_image <- function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
+#' 
+#' 
+plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=1, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
                          plot_spot=F, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
-                         plot_cell=T, contour, cell_types, color_use=NULL, axis_tick=0, axis_col='grey' ) {
+                         plot_cell=T, contour, cell_types, cell_types_of_interest=unique(cell_types), 
+                         color_use=NULL, axis_tick=0, axis_col='grey' ) {
     
    if( is.null(im) ) {
         cat("Reading", image, "...\n")
@@ -49,7 +55,14 @@ plot_sub_image <- function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0
     im <- im %>%
         as_EBImage()
     
+    if( image_transparency>=0 & image_transparency<=1 ) 
+    {
+        im <- (1-image_transparency)*im + image_transparency*(im*0+1)
+    }
+    
     uni_celltypes = sort( unique(cell_types) )
+    num_celltypes = table(cell_types)
+    num_celltypes = num_celltypes[ match(uni_celltypes, names(num_celltypes)) ]
     n = length(uni_celltypes)
     
     if(is.null(color_use))
@@ -93,7 +106,8 @@ plot_sub_image <- function(im=NULL, im_path=NULL, w=NULL, h=NULL, xoff=0, yoff=0
         plot_cell_contour(contour, cell_coordinates, w, h, xoff, yoff, x_scale, cell_cols)
         par(mar = c(0, 0, 0, 0))
         plot.new()
-        legend('topleft', legend=uni_celltypes, pch=1, col=color_use, 
+        legend = paste0(uni_celltypes," (", num_celltypes ,")" )
+        legend('topleft', legend=legend, pch=1, col=color_use, 
                box.lwd = 0, box.col = "white",bg = "white" )
     }
     

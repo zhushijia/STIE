@@ -4,15 +4,19 @@
 \alias{plot_sub_image}
 \title{plot_sub_image}
 \usage{
-plot_sub_image(im = NULL, im_path = NULL, w = NULL, h = NULL,
-  xoff = 0, yoff = 0, x_scale = 1, plot_spot = F, fct = 0.25,
-  spot_coordinates = NULL, spot_types = NULL, plot_cell = T, contour,
-  cell_types, color_use = NULL, axis_tick = 0, axis_col = "grey")
+plot_sub_image(im = NULL, im_path = NULL, image_transparency = 1,
+  w = NULL, h = NULL, xoff = 0, yoff = 0, x_scale = 1,
+  plot_spot = F, fct = 0.25, spot_coordinates = NULL,
+  spot_types = NULL, plot_cell = T, contour, cell_types,
+  cell_types_of_interest = unique(cell_types), color_use = NULL,
+  axis_tick = 0, axis_col = "grey")
 }
 \arguments{
 \item{im}{}
 
 \item{im_path}{}
+
+\item{image_transparency}{}
 
 \item{w}{}
 
@@ -38,10 +42,18 @@ plot_sub_image(im = NULL, im_path = NULL, w = NULL, h = NULL,
 
 \item{cell_types}{}
 
+\item{cell_types_of_interest}{}
+
+\item{color_use}{}
+
 \item{axis_tick}{}
 
 \item{axis_col}{}
 }
 \description{
 plot_sub_image
+}
+\examples{
+
+
 }
