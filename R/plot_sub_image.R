@@ -26,7 +26,7 @@
 #' @examples
 #' 
 #' 
-plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=1, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
+plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
                          plot_spot=F, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
                          plot_cell=T, contour, cell_types, cell_types_of_interest=unique(cell_types), 
                          color_use=NULL, axis_tick=0, axis_col='grey' ) {
@@ -55,9 +55,10 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=1, w=NULL, 
     im <- im %>%
         as_EBImage()
     
-    if( image_transparency>=0 & image_transparency<=1 ) 
+    if( image_transparency>=0 & image_transparency<1 ) 
     {
         im <- (1-image_transparency)*im + image_transparency*(im*0+1)
+        display(im,method='raster')
     }
     
     uni_celltypes = sort( unique(cell_types) )
@@ -82,7 +83,6 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=1, w=NULL, 
     mat1 <- matrix(1:2, ncol=2, nrow=1)
     layout(mat1, widths=c(8, 2), heights=c(1, 2))
     
-    display(im,method='raster')
     
     if(plot_spot) plot_spot_info(spot_coordinates, xoff, yoff, x_scale, barcode=F, fct=fct) 
     

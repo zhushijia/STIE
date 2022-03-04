@@ -37,6 +37,21 @@ plot(score2)
 rr[which.min(score2)]
 
 
+i = 10
+markers = find_sig_markers(STIE_result=result[[i]], ST_expr, transform="log", DEG_pthres=1)
+features = unique(markers$features)
+
+markers2 = do.call(cbind, lapply( 1:i, function(j) {
+    a = markers$pct.1[ markers$clusters == j ]
+    names(a) = markers$features[ markers$clusters == j ]
+    a = a[order(names(a))]
+    a
+} ) )
+
+Signature = Signature[rownames(Signature) %in% rownames(markers2), ]
+markers2 = markers2[ match( rownames(Signature), rownames(markers2) ), ]
+
+
 
 
 ############################################################

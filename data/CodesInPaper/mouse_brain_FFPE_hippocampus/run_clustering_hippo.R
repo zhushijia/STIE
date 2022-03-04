@@ -12,7 +12,7 @@ source( paste0(STIE.dir,"/data/CodesInPaper/mouse_brain_FFPE_hippocampus/paramet
 cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
 
 result = list()
-for(i in 2:9)
+for(i in 2:10)
 {
     cat(i,'\n')
     

@@ -145,19 +145,6 @@ if( deconvolution )
                                                       "DCT", "PCT", 
                                                       "PST") ]
     
-    NatCommes_fullSignature_res_s2_0 = STIE(ST_expr, Signature, cell_coordinates=morphology_fts, features, spot_coordinates, spot_radius=2*spot_radius, lambda=0,steps=15)
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseKidney_FFPE/count/results/parameter_testing")
-    save(NatCommes_fullSignature_res_s2_0, file="NatCommes_fullSignature_res_s2_0.RData")
-    
-    Signature2 = t(apply(Signature,1,function(x)tapply(x,group$region,mean)))
-    NatCommes_Signature_res_s2_0 = STIE(ST_expr, Signature2, cell_coordinates=morphology_fts, features, spot_coordinates, spot_radius=2*spot_radius, lambda=0,steps=15)
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseKidney_FFPE/count/results/parameter_testing")
-    save(NatCommes_Signature_res_s2_0, file="NatCommes_Signature_res_s2_0.RData")
-    
-    Signature3 = t(apply(Signature,1,function(x)tapply(x,group$subregion,mean)))
-    NatCommes_subSignature_res_s2_0 = STIE(ST_expr, Signature=Signature3, cell_coordinates=morphology_fts, features, spot_coordinates, spot_radius=2*spot_radius, lambda=0,steps=15)
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseKidney_FFPE/count/results/parameter_testing")
-    save(NatCommes_subSignature_res_s2_0, file="NatCommes_subSignature_res_s2_0.RData")
 }
 
 ############################################################

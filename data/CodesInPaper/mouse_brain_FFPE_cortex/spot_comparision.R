@@ -7,8 +7,8 @@ load("parameters_hippo.R")
 ############################################################
 # spot
 ############################################################
-ratio = sort( unique(seq(0.5,8,0.5)) )
-#ratio = seq(0.4,8,0.2)
+#ratio = sort( unique(seq(0.5,8,0.5)) )
+ratio = sort( unique( c(seq(0.5,10,0.5), seq(1,10,0.2)) ) )
 result = list()
 for(i in 1:length(ratio))
 {
@@ -18,6 +18,11 @@ for(i in 1:length(ratio))
                        morphology_steps=ceiling(steps/3), 
                        known_signature=TRUE, known_cell_types=FALSE)
 }
+
+names(result) = ratio
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
+save(result, score, bic, cell_count, file="MouseBrainCortex_spot_BIC_new_cells_on_spot.RData")
+
 
 score = lapply( result, function(x) BIC(x) )
 

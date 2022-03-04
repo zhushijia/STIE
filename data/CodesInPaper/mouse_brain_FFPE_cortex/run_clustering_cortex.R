@@ -12,7 +12,7 @@ source( paste0(STIE.dir,"/data/CodesInPaper/mouse_brain_FFPE_cortex/parameters_c
 cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
 
 result = list()
-for(i in 2:9)
+for(i in 2:10)
 {
     cat(i,'\n')
     
@@ -27,14 +27,15 @@ for(i in 2:9)
                      known_signature=FALSE, known_cell_types=FALSE)
 }
 
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
+save(result, file="MouseBrainCortex_clustering.RData")
+
+
 score1 = lapply( result[5:9], function(x) calculate_BIC(x, ST_expr) )
 score2 = sapply(score1,mean)
 names(score2) = names(score2) = rr
 plot(score2)
 rr[which.min(score2)]
-
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
-save(result, file="MouseBrainCortex_clustering.RData")
 
 
 ############################################################
@@ -100,7 +101,7 @@ plot_sub_image(im=im, w=14000, h=7000, xoff=6000, yoff=8000,
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
 load("MouseBrainCortex_clustering.RData")
 
-x_scale = 0.1
+x_scale = 0.05
 pdf( paste0("MouseBrainCortex_clustering_scale", x_scale, ".pdf") )
 
 for(i in 2:length(result))
@@ -111,10 +112,11 @@ for(i in 2:length(result))
     myCol = c( "red", "blue", "green", "black", "cyan", "yellow", "steelblue",
                "darkorange", "darkred", "grey", "blue4", "purple", "chartreuse4", "burlywood1", "darkgoldenrod4" )
     colors = myCol[ 1:ncol(result[[i]]$Signature) ]
+    colors = colors[ length(colors)+1-rank(table(cell_types)) ]
     
     #colors = get_my_colors(ncol(result[[i]]$Signature),mode=2)
     
-    plot_sub_image(im=im, w=14000, h=7000, xoff=6000, yoff=8000, 
+    plot_sub_image(im=im, image_transparency=0, w=14000, h=7000, xoff=6000, yoff=8000, 
                    x_scale=x_scale, spot_coordinates=spot_coordinates, 
                    contour=contour2, cell_types=cell_types, color_use=colors, 
                    plot_spot=F, plot_cell=T  )

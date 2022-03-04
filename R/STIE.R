@@ -139,7 +139,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         all( rownames(PE_on_spot)==rownames(PM_on_spot) )
         
         ###########  
-        if(step>10)
+        if(step>morphology_steps)
         {
             cat( "   updating morphology parameter ... \n")
             morphology_parameter <- update_morphology_parameter(PE_on_spot, PM_on_cell, cells_on_spot, features)
