@@ -55,11 +55,6 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, 
     im <- im %>%
         as_EBImage()
     
-    if( image_transparency>=0 & image_transparency<1 ) 
-    {
-        im <- (1-image_transparency)*im + image_transparency*(im*0+1)
-        display(im,method='raster')
-    }
     
     uni_celltypes = sort( unique(cell_types) )
     num_celltypes = table(cell_types)
@@ -83,6 +78,11 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, 
     mat1 <- matrix(1:2, ncol=2, nrow=1)
     layout(mat1, widths=c(8, 2), heights=c(1, 2))
     
+    if( image_transparency>=0 & image_transparency<1 ) 
+    {
+        im <- (1-image_transparency)*im + image_transparency*(im*0+1)
+        display(im,method='raster')
+    }
     
     if(plot_spot) plot_spot_info(spot_coordinates, xoff, yoff, x_scale, barcode=F, fct=fct) 
     

@@ -23,7 +23,6 @@ for(i in 2:10)
     Signature = t(apply(ST_expr3, 2, function(x) tapply(x,cluster[,2],mean) ))
     
     result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                     morphology_steps=ceiling(steps/3), 
                      known_signature=FALSE, known_cell_types=FALSE)
 }
 
