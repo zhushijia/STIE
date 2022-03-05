@@ -4,7 +4,7 @@
 \alias{plot_sub_image}
 \title{plot_sub_image}
 \usage{
-plot_sub_image(im = NULL, im_path = NULL, image_transparency = 1,
+plot_sub_image(im = NULL, im_path = NULL, image_transparency = 0,
   w = NULL, h = NULL, xoff = 0, yoff = 0, x_scale = 1,
   plot_spot = F, fct = 0.25, spot_coordinates = NULL,
   spot_types = NULL, plot_cell = T, contour, cell_types,

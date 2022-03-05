@@ -6,7 +6,7 @@
 \usage{
 STIE(ST_expr, Signature, cells_on_spot, features, lambda = 0,
   steps = 30, morphology_steps = ceiling(steps/3),
-  known_signature = TRUE, known_cell_types = FALSE)
+  known_signature = TRUE, known_cell_types = FALSE, min_cells = 2)
 }
 \arguments{
 \item{ST_expr}{}
@@ -25,7 +25,7 @@ STIE(ST_expr, Signature, cells_on_spot, features, lambda = 0,
 
 \item{known_signature}{}
 
-\item{known_cell_types}{}
+\item{min_cells}{}
 }
 \description{
 STIE
