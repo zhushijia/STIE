@@ -24,12 +24,12 @@ update_morphology_parameter <- function(PE_on_spot, PM_on_cell, cells_on_spot, f
     s = colSums(PME_uni_cell)
     mu = a/s
     
-    b = do.call( rbind, lapply(1:ncol(Signature), function(t) {
+    b = do.call( rbind, lapply(1:ncol(PM_on_cell), function(t) {
         p = as.matrix(PME_uni_cell[,t])
         d = t(apply(cells_on_spot[,features],1,function(x) x-mu[t,] ))
         t(p)%*%d^2
     }))
-    rownames(b) = colnames(Signature)
+    rownames(b) = colnames(PM_on_cell)
     #sigma = apply(b,2,function(x) x/s)
     sigma = sqrt( b/s )
     

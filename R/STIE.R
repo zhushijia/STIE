@@ -8,7 +8,9 @@
 #' @param steps 
 #' @param morphology_steps 
 #' @param known_signature 
-#' @param known_cell_types 
+#' @param known_cell_types
+#' @param min_cells 
+#' 
 #'
 #' @return
 #' @export
@@ -18,13 +20,8 @@
 #' 
 STIE <- function(ST_expr, Signature, cells_on_spot, features, 
                   lambda=0, steps=30, morphology_steps=ceiling(steps/3),
-                  known_signature=TRUE, known_cell_types=FALSE)
+                  known_signature=TRUE, known_cell_types=FALSE, min_cells=2)
 {
-    # S is the matrix of cell type signature, row: genes, col: cell types
-    # B is the gene expression of one spot, row: genes, col: cell types
-    # beta is the current estimation of regression coefficients
-    # Pm is the probability of morphology for cell type
-    # lambda is the langurange multiplier
     
     cl <- makeCluster( detectCores() )
     registerDoParallel(cl)
@@ -116,15 +113,47 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         ########### 
         cat( "   recalculate PE and PM ... \n")
+        
         mu = mu_
         sigma = sigma_
         Signature = Signature_
-        
         PE_on_spot = PE_on_spot_
-        PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
         
-        ########### 
+        PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
         PE_on_cell = PE_on_spot[ match(spot_id,rownames(PE_on_spot)) ,  ]
+        
+        ####################################################################################
+        ###########  v1.8 to filter out cell types of small number
+        ####################################################################################
+        PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
+        PME_uni_cell = apply(PME_on_cell, 2, function(x) tapply(x, cell_id, max) )
+        PME_uni_cell = PME_uni_cell[ match( cell_id, rownames(PME_uni_cell) ) , ]
+        cell_types = colnames(PME_uni_cell)[apply(PME_uni_cell, 1, which.max)]
+        names(cell_types) = rownames(PME_uni_cell)
+        
+        uni_cell_types = tapply( cell_types, names(cell_types), function(x) x[1] )
+        count_cell_types = table(uni_cell_types)
+        filtered = which( colnames(Signature) %in% names(count_cell_types)[count_cell_types > min_cells] )
+        
+        if( length(filtered)<ncol(Signature) )
+        {
+            mu = mu_[filtered, ]
+            sigma = sigma_[filtered, ]
+            Signature = Signature_[ ,filtered]
+            PE_on_spot = t( apply(PE_on_spot_[ ,filtered], 1, function(x) x/sum(x)) )
+            PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
+            PE_on_cell = PE_on_spot[ match(spot_id,rownames(PE_on_spot)) ,  ]
+            
+            mu_ = mu
+            sigma_ = sigma
+            Signature_ = Signature
+            PE_on_spot_ = PE_on_spot
+            
+        } 
+        
+        ####################################################################################
+        ###########  above v1.8 to filter out cell types of small number
+        ####################################################################################
         
         # v1.4
         #PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
@@ -179,6 +208,9 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         cat("--> PE diff:", PE_tah, ", and PM diff:", PM_tah, ", and Sig diff:", Sig_tah, "\n\n")
         
         print(mu)
+        cat("\n")
+        print(table(uni_cell_types))
+        cat("\n")
     }
     
 
@@ -190,7 +222,10 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     cell_types = colnames(PME_uni_cell)[apply(PME_uni_cell, 1, which.max)]
     names(cell_types) = rownames(PME_uni_cell)
     
-    cat( "   calculate adjacent similarity ... \n")
+    uni_cell_types = tapply( cell_types, names(cell_types), function(x) x[1] )
+    count_cell_types = table(uni_cell_types)
+    
+    #cat( "   calculate adjacent similarity ... \n")
     #adjacent_similarity = get_adjacent_similarity(cells_on_spot, features, cell_types) 
     
     result <- list(lambda=lambda,
@@ -199,8 +234,11 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
          PE_on_spot = PE_on_spot,
          PM_on_cell = PM_on_cell,
          PME_uni_cell = PME_uni_cell, 
-         cell_types=cell_types, 
+         cell_types=cell_types,
+         uni_cell_types=uni_cell_types,
          Signature=Signature,
          cells_on_spot=cells_on_spot)
     
 }
+
+

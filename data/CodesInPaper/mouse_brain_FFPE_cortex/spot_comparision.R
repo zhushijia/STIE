@@ -15,13 +15,12 @@ for(i in 1:length(ratio))
     cat(ratio[i],'\n')
     cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, ratio[i]*spot_radius)
     result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                       morphology_steps=ceiling(steps/3), 
                        known_signature=TRUE, known_cell_types=FALSE)
 }
 
 names(result) = ratio
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
-save(result, score, bic, cell_count, file="MouseBrainCortex_spot_BIC_new_cells_on_spot.RData")
+save(result, score, bic, cell_count, file="MouseBrainCortex_spot_BIC_new_cells_on_spot_new_STIE.RData")
 
 
 score = lapply( result, function(x) BIC(x) )
