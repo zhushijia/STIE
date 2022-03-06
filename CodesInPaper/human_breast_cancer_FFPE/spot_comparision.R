@@ -15,7 +15,6 @@ for(i in 1:length(ratio))
     cat(ratio[i],'\n')
     cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, ratio[i]*spot_radius)
     result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                     morphology_steps=ceiling(steps/3), 
                      known_signature=TRUE, known_cell_types=FALSE)
 }
 
