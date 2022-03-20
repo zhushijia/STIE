@@ -2,7 +2,7 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-load("parameter_BreastCancer.R")
+source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
 
 ################################################################################################
 ########## load data
@@ -24,10 +24,11 @@ results = result
 ######### STIE result
 ############################################################
 
-result = results[['2.8']]
+#result = results[['2.8']]
 
 stie_cell_types = result$cell_types
 stie_cell_types = stie_cell_types[ match(unique(names(stie_cell_types)), names(stie_cell_types)) ]
+#stie_cell_types = stie_cell_types[!stie_cell_types%in%c("Myeloid")]
 
 stie_cell_feature = morphology_fts[ match( names(stie_cell_types), rownames(morphology_fts) ), ]
 stie_cell_contour = cell_info$cell_contour[ match( names(stie_cell_types), names(cell_info$cell_contour) ) ]
@@ -39,6 +40,7 @@ STdata = load_STdata( "Visium_FFPE_Human_Breast_Cancer", args$spaceranger_count_
 normalized_count = STdata$normalized_matrix[[1]]
 count = STdata$matrix[[1]]
 Signature = Signature[rownames(Signature) %in% colnames(normalized_count),]
+#Signature = Signature[, !colnames(Signature)%in%c("Myeloid")]
 
 ############################################################
 ########## deep learning features
@@ -61,7 +63,7 @@ dl_cell_feature = with(cells, data.frame(
                     Solidity=solidity) )
 dl_cell_feature = subset(dl_cell_feature, celltypes!="blood" )
 dl_cell_feature = dl_cell_feature[order(dl_cell_feature$probability,decreasing=T),]
-
+#dl_cell_feature = subset( dl_cell_feature, celltypes!="macrophage")
 #> dim(dl_cell_feature)
 #[1] 65398    10
 
@@ -117,7 +119,7 @@ table2df <- function(t) {
 
 t1 = table(dl_cell_types, stie_cell_types)
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-write.table(table2df(t1),"DL_STIE_concordance.txt",sep="\t",col.names=T,row.names=F,quote=F)
+#write.table(table2df(t1),"DL_STIE_concordance.txt",sep="\t",col.names=T,row.names=F,quote=F)
 
 ###########################################################
 ######### assign larger category
@@ -130,12 +132,12 @@ dl_cell_types2[dl_cell_types%in%c("stroma")] = "Stroma"
 
 stie_cell_types2 = stie_cell_types
 stie_cell_types2[stie_cell_types%in%c("CancerEpithelial", "NormalEpithelial")] = "Epithelia"
-stie_cell_types2[stie_cell_types%in%c("Tcells", "Bcells", "Plasmablasts")] = "Immune"
-stie_cell_types2[stie_cell_types%in%c("CAFs", "Endothelial")] = "Stroma"
+stie_cell_types2[stie_cell_types%in%c("Tcells", "Bcells", "Plasmablasts","Myeloid")] = "Immune"
+stie_cell_types2[stie_cell_types%in%c("CAFs", "Endothelial","PVL")] = "Stroma"
 
 t2 = table(dl_cell_types2, stie_cell_types2) 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-write.table(table2df(t2),"DL_STIE_concordance_larger_category.txt",sep="\t",col.names=T,row.names=F,quote=F)
+#write.table(table2df(t2),"DL_STIE_concordance_larger_category.txt",sep="\t",col.names=T,row.names=F,quote=F)
 
 t2
 sum(diag(t2[-1,]))/sum(t2[-1,])
@@ -172,8 +174,10 @@ cc = do.call(cbind, lapply(1:ncol(t3),function(i) {
 } ) )
 cc = data.frame( overlap=colnames(t3), t(cc) )
 
+data.frame( a=colnames(t3), b=apply(cc[,-1],1,function(x)colnames(cc)[which.max(x)+1]) )
+
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-write.table(cc,"DL_STIE_scRNA_Signature_concordance_larger_category.txt",sep="\t",col.names=T,row.names=F,quote=F)
+#write.table(cc,"DL_STIE_scRNA_Signature_concordance_larger_category.txt",sep="\t",col.names=T,row.names=F,quote=F)
 
 
 top10_cells = sapply(1:ncol(t3),function(i) {
@@ -189,7 +193,7 @@ all_cells = sapply( strsplit( colnames(t3), "_vs_" ), function(x) {
 
 c2 = data.frame(cc,top10_cells,all_cells)
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-write.table(c2,"DL_STIE_scRNA_Signature_concordance_larger_category_allinfo.txt",sep="\t",col.names=T,row.names=F,quote=F)
+#write.table(c2,"DL_STIE_scRNA_Signature_concordance_larger_category_allinfo.txt",sep="\t",col.names=T,row.names=F,quote=F)
 
 
 

@@ -2,9 +2,7 @@ deconvolution = FALSE
 clustering = FALSE
 signature_learning = FALSE
 
-library(STIE)
-STIE.dir = system.file(package = "STIE")
-load( paste0(STIE.dir,"/data/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R") )
+source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
 
 ############################################################
 ## run clustering
@@ -26,10 +24,9 @@ for(i in 2:10)
     workdir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/Kmeans/Seurat"
     fileName = paste0(workdir,"/cluster_",i,"/cluster_",i,".Seurat.markers.txt") 
     marker = read.delim( fileName, sep="\t", header=T)
-    Signature = Signature[rownames(Signature)%in%marker$gene, ]
+    #Signature = Signature[rownames(Signature)%in%marker$gene, ]
     
     result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=1e6, steps=30, 
-                     morphology_steps=ceiling(steps/3), 
                      known_signature=FALSE, known_cell_types=FALSE)
 }
 

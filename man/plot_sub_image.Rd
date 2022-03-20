@@ -7,9 +7,9 @@
 plot_sub_image(im = NULL, im_path = NULL, image_transparency = 0,
   w = NULL, h = NULL, xoff = 0, yoff = 0, x_scale = 1,
   plot_spot = F, fct = 0.25, spot_coordinates = NULL,
-  spot_types = NULL, plot_cell = T, contour, cell_types,
-  cell_types_of_interest = unique(cell_types), color_use = NULL,
-  axis_tick = 0, axis_col = "grey")
+  spot_types = NULL, plot_cell = T, contour = NULL,
+  cell_types = NULL, cell_types_of_interest = unique(cell_types),
+  color_use = NULL, axis_tick = 0, axis_col = "grey")
 }
 \arguments{
 \item{im}{}

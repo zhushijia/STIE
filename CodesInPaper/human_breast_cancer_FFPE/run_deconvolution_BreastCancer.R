@@ -2,8 +2,7 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-STIE.dir = system.file(package = "STIE")
-load( paste0(STIE.dir,"/data/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R") )
+source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
 
 ############################################################
 ## run deconvolution
@@ -12,7 +11,7 @@ load( paste0(STIE.dir,"/data/CodesInPaper/human_breast_cancer_FFPE/parameter_Bre
 cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
 
 result <- STIE(ST_expr, Signature, cells_on_spot, features, 
-               lambda=0, steps=30, morphology_steps=ceiling(steps/3),
+               lambda=0, steps=30, 
                known_signature=known_signature, known_cell_types=known_cell_types)
 
 cell_types = result$cell_types

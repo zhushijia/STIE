@@ -74,7 +74,7 @@ cat("Loading morpholgy features...\n")
 
 cell_info_file = paste0(args$feature_dir,"/cell_info.RData")
 if( file.exists( cell_info_file ) ) {
-    c = load(cell_info_file)
+    x = load(cell_info_file)
 } else {
     cell_info <- merge_feature( args$feature_dir )
 }

@@ -2,8 +2,7 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-STIE.dir = system.file(package = "STIE")
-load( paste0(STIE.dir,"/data/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo.R") )
+source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo.R")
 
 ############################################################
 ## run deconvolution

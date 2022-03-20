@@ -30,12 +30,18 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     spot_id = as.character(cells_on_spot$spot)
     cell_id = as.character(cells_on_spot$cell_id)
     
-    ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id, match(rownames(Signature),colnames(ST_expr)) ] )
+    if( is.null(Signature) )
+    {
+        ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id,  ] )
+    } else {
+        Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
+        ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id, match(rownames(Signature),colnames(ST_expr)) ] )
+    }
     
     ##########################################################################################
     ########### set initial values
     ##########################################################################################
-    if( known_signature & !known_cell_types ) 
+    if( known_signature & !known_cell_types )  # deconvolution
     {
         Signature_ = Signature
         
@@ -58,7 +64,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
     }
     
-    if( !known_signature & !known_cell_types ) 
+    if( !known_signature & !known_cell_types ) # clustering
     {
         Signature_ = Signature
         
@@ -83,16 +89,18 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     
     if( !known_signature & known_cell_types ) 
     {
-        mu = do.call(cbind, lapply(features, function(f) tapply( cell_coordinates[,f], 
-                                                  as.character(cell_coordinates[,"celltypes"]), mean ) ))
-        sigma = do.call(cbind, lapply(features, function(f) tapply( cell_coordinates[,f], 
-                                                                 as.character(cell_coordinates[,"celltypes"]), sd ) ))
+        annoted_cells = which(!is.na(cells_on_spot$cell_types))
+        mu = do.call(cbind, lapply(features, function(f) tapply( cells_on_spot[,f], 
+                                                  as.character(cells_on_spot[,"cell_types"]), mean ) ))
+        sigma = do.call(cbind, lapply(features, function(f) tapply( cells_on_spot[,f], 
+                                                                 as.character(cells_on_spot[,"cell_types"]), sd ) ))
         colnames(mu) = colnames(sigma) = features
         
-        PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
-        coefs = apply(PM_on_cell, 2, function(x) tapply(x,spot_id,sum) )
+        coefs = table( as.character(cells_on_spot$spot), as.character(cells_on_spot$cell_types) )
+        coefs = coefs[match( colnames(ST_expr2), rownames(coefs) ), ]
         Signature = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
         
+        PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
         PE_on_spot = t( apply(coefs, 1, function(x) x/sum(x)) )
     }
     
@@ -125,7 +133,15 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         ####################################################################################
         ###########  v1.8 to filter out cell types of small number
         ####################################################################################
-        PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
+        #PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
+        PME_on_cell = PM_on_cell*PE_on_cell
+        PME_on_cell = do.call(rbind, lapply( 1:nrow(PME_on_cell), function(i) {
+            s = sum(PME_on_cell[i,])
+            if( s>0 ) {
+                PME_on_cell[i,]/s
+            } else {
+                PE_on_cell[i,]
+            } } ) )
         PME_uni_cell = apply(PME_on_cell, 2, function(x) tapply(x, cell_id, max) )
         PME_uni_cell = PME_uni_cell[ match( cell_id, rownames(PME_uni_cell) ) , ]
         cell_types = colnames(PME_uni_cell)[apply(PME_uni_cell, 1, which.max)]
@@ -177,8 +193,9 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         }
         ########### 
         cat( "   updating expression regression parameter ... \n" ) 
-        coefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
-            
+        #ccoefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
+        coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
+            #cat(i,"\n")
             Expr_on_spot_i = as.matrix( ST_expr2[,i] )
             PE_on_spot_i = PE_on_spot[i,]
             PM_on_spot_i = PM_on_spot[i,]
@@ -186,7 +203,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
                                                    Expr_on_spot_i, PE_on_spot_i, 
                                                    PM_on_spot_i, lambda = lambda, 
                                                    scaled=F, kfold=10 )
-        })
+        }))
         
         PE_on_spot_ = t( apply(coefs, 1, function(x) x/sum(x)) )
         rownames(coefs) = rownames(PE_on_spot)
@@ -194,7 +211,14 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         if( !known_signature )
         {
-            Signature_ = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+            # Signature_ = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+            Signature_ = do.call( rbind, lapply( 1:nrow(ST_expr2), function(i) {
+                tryCatch( solveOLS( coefs, as.matrix(ST_expr2[i,]), scaled=F ), 
+                          error = function(e) {
+                              rep(0,ncol(coefs))
+                          })
+            }))
+            rownames(Signature_) = rownames(ST_expr2)
             #plot(Signature_[,1],Signature[,1])
         }
         
@@ -239,6 +263,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
          Signature=Signature,
          cells_on_spot=cells_on_spot)
     
+    return(result)
 }
 
 

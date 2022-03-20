@@ -2,7 +2,7 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-load("parameter_BreastCancer.R")
+source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
 
 ############################################################
 # run on different spot size

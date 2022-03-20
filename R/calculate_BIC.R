@@ -74,7 +74,9 @@ calculate_BIC <- function(STIE_result, ST_expr)
         mean( (y-t*bx)^2 )
     } )
     
-    list( bic=bic, mse=mse, celltypes_on_spot=celltypes_on_spot )
+    rmse = mean(sqrt(mse))
+    
+    list( bic=bic, mse=mse, rmse=rmse, celltypes_on_spot=celltypes_on_spot )
     
 }
 

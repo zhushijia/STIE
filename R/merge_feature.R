@@ -52,7 +52,8 @@ merge_feature <- function( feature_dir, tag=NULL )
     du = NULL
     if(length(j)>0) {
       ind = c(i,j)
-      du = ind[ which.min(features$Area[ind]) ]
+      #du = ind[ which.min(features$Area[ind]) ]
+      du = ind[ -which.max(features$Area[ind]) ]
     } 
     du
   } ))

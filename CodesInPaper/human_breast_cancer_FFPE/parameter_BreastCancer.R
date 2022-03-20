@@ -154,7 +154,7 @@ if( signature_learning )
     cells = data.frame(fread("Breast_Cancer_FFPE_information_model40_image20.csv"))
     morphology_fts = with(cells, data.frame(
         cell_id = paste0("cell_",rownames(cells)),
-        celltypes=nucleus_class,
+        cell_types=nucleus_class,
         probability=probability,
         X=centroid_x0,
         Y=centroid_y0,
@@ -164,17 +164,17 @@ if( signature_learning )
         Eccentricity=eccentricity,
         Orientation=orientation,
         Solidity=solidity) )
-    morphology_fts = subset(morphology_fts, ! celltypes %in% c("blood") )
+    #morphology_fts = subset(morphology_fts, ! cell_types %in% c("blood") )
     morphology_fts = morphology_fts[order(morphology_fts$probability,decreasing=T),]
-    morphology_fts = subset(morphology_fts,probability>0.5)
+    morphology_fts = subset(morphology_fts,probability>0.1)
     morphology_fts$pixel_x = morphology_fts$X * args$x_scale
     morphology_fts$pixel_y = morphology_fts$Y * args$x_scale
     if(1) {
-        celltypes2 = as.character(morphology_fts$celltypes)
-        celltypes2[celltypes2%in%c("tumor", "necrosis", "ductal epithelium")] = "Epithelia"
-        celltypes2[celltypes2%in%c("lymphocyte", "macrophage")] = "Immune"
-        celltypes2[celltypes2%in%c("stroma")] = "Stroma"
-        morphology_fts$celltypes = celltypes2
+        cell_types2 = as.character(morphology_fts$cell_types)
+        cell_types2[cell_types2%in%c("tumor", "necrosis", "ductal epithelium")] = "Epithelia"
+        cell_types2[cell_types2%in%c("lymphocyte", "macrophage")] = "Immune"
+        cell_types2[cell_types2%in%c("stroma")] = "Stroma"
+        morphology_fts$cell_types = cell_types2
     }
 
 }

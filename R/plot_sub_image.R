@@ -28,7 +28,7 @@
 #' 
 plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
                          plot_spot=F, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
-                         plot_cell=T, contour, cell_types, cell_types_of_interest=unique(cell_types), 
+                         plot_cell=T, contour=NULL, cell_types=NULL, cell_types_of_interest=unique(cell_types), 
                          color_use=NULL, axis_tick=0, axis_col='grey' ) {
     
    if( is.null(im) ) {
@@ -69,7 +69,7 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, 
         color_use = myCol[1:n]
     }
     
-    cell_cols = rep(0,length(cell_types))
+    cell_cols = rep(1,length(cell_types))
     for(i in 1:n) cell_cols[cell_types==uni_celltypes[i]] = color_use[i]
     
     spot_cols = rep(0,length(spot_types))

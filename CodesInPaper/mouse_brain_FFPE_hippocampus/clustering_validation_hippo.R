@@ -4,82 +4,6 @@ signature_learning = FALSE
 
 source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo.R")
 
-############################################################
-## run clustering
-############################################################
-
-cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
-
-result = list()
-for(i in 2:10)
-{
-    cat(i,'\n')
-    
-    cluster = read.csv(paste0(args$spaceranger_count_dir, "/outs/analysis/clustering/kmeans_",i,"_clusters/clusters.csv") )
-    cluster = cluster[ as.character(cluster[,1])%in%rownames(ST_expr), ]
-    all( as.character(cluster[,1]) %in% rownames(ST_expr) )
-    ST_expr3 = ST_expr[ match(as.character(cluster[,1]),rownames(ST_expr)), ]
-    Signature = t(apply(ST_expr3, 2, function(x) tapply(x,cluster[,2],mean) ))
-    
-    result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                     known_signature=FALSE, known_cell_types=FALSE)
-}
-
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
-save(result, file="MouseBrainHippocampus_clustering.RData")
-
-score1 = lapply( result[2:9], function(x) calculate_BIC(x, ST_expr) )
-score2 = sapply(score1,function(x) mean(x$bic) )
-plot(score2)
-rr[which.min(score2)]
-
-
-
-> mean(b5[[1]])
-[1] 63203.42
-> mean(b6[[1]])
-[1] 65479.65
-> mean(b4[[1]])
-[1] 63405.09
-
-############################################################
-# run clustering on known signature genes
-############################################################
-cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
-
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/BroadInstitute_SingleCell")
-Signature = read.delim("Major_cell_types_marker_genes.txt", header=T, row.names=1)
-SS = Signature[,!colnames(Signature)%in%c("Ependymal.cells")]
-SS = as.matrix(SS)[rownames(SS)%in%colnames(ST_expr),]
-
-res4 = list()
-for(i in 2:10)
-{
-    cat(i,'\n')
-    
-    cluster = read.csv(paste0("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/Visium_FFPE_Mouse_Brain/outs/analysis/clustering/kmeans_",i,"_clusters/clusters.csv") )
-    cluster = cluster[ as.character(cluster[,1])%in%rownames(ST_expr), ]
-    all( as.character(cluster[,1]) %in% rownames(ST_expr) )
-    ST_expr3 = ST_expr[ match(as.character(cluster[,1]),rownames(ST_expr)), ]
-    Signature = t(apply(ST_expr3, 2, function(x) tapply(x,cluster[,2],mean) ))
-    Signature = Signature[rownames(Signature)%in%rownames(SS), ]
-    
-    res4[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                     morphology_steps=ceiling(steps/3), 
-                     known_signature=FALSE, known_cell_types=FALSE)
-}
-
-score1 = lapply( res4[2:10], function(x) BIC(x) )
-score2 = sapply(score1,mean)
-names(score2) = names(score2) = rr
-plot(score2)
-
-
-############################################################
-# clustering deconvolution
-############################################################
-
-
 dwls = function(S, B)
 {
     library(Matrix)
@@ -154,6 +78,11 @@ for(i in 2:10)
     bs_dwls = dwls(S=sc_signature, B=bs_signature)
     kmeans_dwls = dwls(S=sc_signature, B=kmeans_signature)
     
+    
+    ################################################################################################
+    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
+    pdf( paste0("STIE_cluster_",i,".pdf"), w=10, h=8 )
+    
     myCol=c('yellow','black','red','green','blue','purple','cyan','white','orange')
     myCol=rev( c('red','blue','green','black','cyan','yellow') )
     
@@ -162,35 +91,28 @@ for(i in 2:10)
     par(mfrow=c(2,3))
     index = 1:ncol(sc_signature)
     index = c(7,5,2,3,6,1,4)
+    index = c(3,6,2,4,8,1,7,5)
     barplot(stie_ols[,index],col=myCol,ylim=c(0,1))
     barplot(bs_ols,col=myCol,ylim=c(0,1))
     barplot(kmeans_ols,col=myCol,ylim=c(0,1))
-    
     barplot(stie_dwls[,index],col=myCol,ylim=c(0,1))
     barplot(bs_dwls,col=myCol,ylim=c(0,1))
     barplot(kmeans_dwls,col=myCol,ylim=c(0,1))
     
+    ############################################################
+    # visualization
+    ############################################################
     
-    barplot(apply(stie_dwls[index,],2,function(x)x/sum(x)),col=myCol,ylim=c(0,1))
-    barplot(apply(cluster_dwls[index,],2,function(x)x/sum(x)),col=myCol,ylim=c(0,1))
+    cell_types = result[[i]]$cell_types
+    contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
+    colors = get_my_colors(ncol(result[[i]]$Signature),mode=2)
+    colors = c('yellow','green','black','cyan','blue','red','white')
+    colors = c('orange','green','red','black','yellow','blue','cyan','purple')
+    plot_sub_image(im=im, w=6000, h=5000, xoff=8000, yoff=10500, 
+                   x_scale=x_scale, spot_coordinates=spot_coordinates, 
+                   contour=contour2, cell_types=cell_types, color_use=colors, plot_spot=F, plot_cell=T  )
     
-    snames = colnames(sc_signature)
-    data.frame( apply(cluster_prop, , function(x) snames[which.max(x)] ), apply(cluster_prop, 2, max) )
-    data.frame( apply(stie_prop, 2, function(x) snames[which.max(x)] ), apply(stie_prop, 2, max) )
-    
-    cluster_max = apply( cluster_prop, 1, max )
-    stie_max = apply( stie_prop, 1, max )
-    boxplot(cluster_max, stie_max)
-    
-    cluster_max = apply( cluster_prop[index,], 1, max )
-    stie_max = apply( stie_prop[index,], 1, max )
-    boxplot(cluster_max, stie_max)
-    wilcox.test(cluster_max, stie_max,'less',paired=T)
-    
-    cluster_max = apply( cluster_prop[index,1:6], 1, max )
-    stie_max = apply( stie_prop[index,1:6], 1, max )
-    boxplot(cluster_max, stie_max)
-    wilcox.test(cluster_max, stie_max,'less',paired=T)
+    dev.off()
     
     
     
