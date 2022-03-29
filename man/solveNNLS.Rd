@@ -2,7 +2,7 @@
 % Please edit documentation in R/solveNNLS.R
 \name{solveNNLS}
 \alias{solveNNLS}
-\title{solveOLS}
+\title{solveNNLS}
 \usage{
 solveNNLS(S, B, scaled = T)
 }
@@ -14,7 +14,7 @@ solveNNLS(S, B, scaled = T)
 \item{scaled}{}
 }
 \description{
-solveOLS
+solveNNLS
 }
 \examples{
 
