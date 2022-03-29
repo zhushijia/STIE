@@ -2,14 +2,12 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo.R")
+source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo3.R")
 
 ############################################################
 # spot
 ############################################################
-#ratio = sort( unique(c(0.5,seq(1,20,0.2),seq(1.5,19.5,1))) )
-ratio = sort( unique( c(seq(0.5,10,0.5), seq(1,10,0.2)) ) )
-#ratio = c(0.5, seq(1,6,1) )
+ratio = seq(0.5,10,0.5)
 results = list()
 for(i in 1:length(ratio))
 {
@@ -22,8 +20,11 @@ for(i in 1:length(ratio))
 
 score = lapply( results, function(x) calculate_BIC(x, ST_expr) )
 names(results) = names(score) = ratio
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
-save(results, score, file="MouseBrainHippo_spot_BIC_new_cells_on_spot.RData")
+
+outputDir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/STIE"
+dir.create(outputDir, recursive=T)
+setwd(outputDir)
+save(results, score, file="MouseBrainHippo_spots.RData")
 
 
 PME_diff = sapply( results, function(res) {

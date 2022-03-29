@@ -1,4 +1,4 @@
-#' solveOLS
+#' solveNNLS
 #'
 #' @param S 
 #' @param B 

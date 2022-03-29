@@ -49,7 +49,7 @@ find_sig_markers <- function(STIE_result, ST_expr, transform="inverse.transform"
     rownames(coefs) = rownames(PE_on_spot)
     colnames(coefs) = colnames(Signature)
     
-    Signature3 = t( apply( ST_expr3, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+    Signature3 = t( apply( ST_expr3, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
     
     INT = function(x, k=3/8)
     {

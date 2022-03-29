@@ -51,7 +51,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         rownames(mu) = rownames(sigma) = colnames(Signature)
         colnames(mu) = colnames(sigma) = features
         
-        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveOLS( Signature, as.matrix(x) ) ) )
+        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x) ) ) )
         
         for(t in 1:nrow(mu))
         {
@@ -74,7 +74,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         rownames(mu) = rownames(sigma) = colnames(Signature)
         colnames(mu) = colnames(sigma) = features
         
-        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveOLS( Signature, as.matrix(x) ) ) )
+        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x) ) ) )
         
         for(t in 1:nrow(mu))
         {
@@ -98,7 +98,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         coefs = table( as.character(cells_on_spot$spot), as.character(cells_on_spot$cell_types) )
         coefs = coefs[match( colnames(ST_expr2), rownames(coefs) ), ]
-        Signature = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+        Signature = t( apply( ST_expr2, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
         
         PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
         PE_on_spot = t( apply(coefs, 1, function(x) x/sum(x)) )
@@ -211,9 +211,9 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         if( !known_signature )
         {
-            # Signature_ = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+            # Signature_ = t( apply( ST_expr2, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
             Signature_ = do.call( rbind, lapply( 1:nrow(ST_expr2), function(i) {
-                tryCatch( solveOLS( coefs, as.matrix(ST_expr2[i,]), scaled=F ), 
+                tryCatch( solveNNLS( coefs, as.matrix(ST_expr2[i,]), scaled=F ), 
                           error = function(e) {
                               rep(0,ncol(coefs))
                           })
