@@ -2,29 +2,29 @@ deconvolution = TRUE
 clustering = FALSE
 signature_learning = FALSE
 
-source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo.R")
+source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Wu_etal_2021_BRCA_scRNASeq")
+y = load("Wu_etal_2021_BRCA_scRNASeq_DWLS_Signature.RData")
 
 ############################################################
-# spot
+# run on different spot size
 ############################################################
-#ratio = sort( unique(c(0.5,seq(1,20,0.2),seq(1.5,19.5,1))) )
-ratio = sort( unique( c(seq(0.5,10,0.5), seq(1,10,0.2)) ) )
-#ratio = c(0.5, seq(1,6,1) )
+#ratio = sort( c(0.5,seq(1,3,0.2),seq(1.5,8,1),seq(4,8,1)) )
+ratio = seq(0.5,8,0.5)
 results = list()
 for(i in 1:length(ratio))
 {
     cat(ratio[i],'\n')
     cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, ratio[i]*spot_radius)
     results[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                       morphology_steps=ceiling(steps/3), 
-                       known_signature=TRUE, known_cell_types=FALSE)
+                     known_signature=TRUE, known_cell_types=FALSE, min_cells=-1)
 }
 
 score = lapply( results, function(x) calculate_BIC(x, ST_expr) )
 names(results) = names(score) = ratio
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
-save(results, score, file="MouseBrainHippo_spot_BIC_new_cells_on_spot.RData")
 
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+save(results, score, file="BreastCancer_spot_new_get_cells_on_spot_full_signature.RData")
 
 PME_diff = sapply( results, function(res) {
     PE_on_spot = res$PE_on_spot
@@ -42,18 +42,16 @@ errplot <- function(X)
     } )
     
     barx = 1:length(m)
-    plot( m, type="l", ylim=range( c( m-se, m+se) ) )
-    axis(side=1,at=barx,label=names(X),las=3)
+    plot( m, type="l", ylim=range( c( m-se, m+se) ), ylab="RMSE" )
+    axis(side=1,at=barx,label=names(score),las=3)
     points( 1:length(m), m, pch=16, cex=1.5 )
     arrows(barx , m+se, barx , m, angle=90, code=3, length=0.05)
     arrows(barx , m-se, barx , m, angle=90, code=3, length=0.05)
 }
 
 
-par(mfrow=c(2,2))
-ind = as.character(seq(0.5,8,0.5))
-errplot( PME_diff[ind] )
-errplot( sapply(score[ind], function(x) sqrt(x$mse) ) )
+errplot(PME_diff)
+errplot( sapply(score, function(x) sqrt(x$mse) ) )
 
 
 ################################################################################################
@@ -127,7 +125,7 @@ leaf.plot = function(dist, xlim=NULL, ylim=NULL, upper=1:length(dist), lower=NUL
 
 barplot2 <- function(score)
 {
-    colors = c( "red", "blue", "green", "black", "cyan", "yellow")
+    colors = c( "steelblue", "darkred", "black", "cyan", "yellow", "darkorange", "#4DAF4A")
     colors = col2rgb(colors)
     colors = apply(colors,2,function(x) rgb(x[1],x[2],x[3],max=255,alpha=0.7*255) )
     
@@ -154,12 +152,11 @@ barplot2 <- function(score)
     lines( barx, m )
     arrows(barx , m+se, barx , m, angle=90, code=3, length=0.05)
     
-    labels = seq(0,150,50)
-    axis(side=4, at=labels, labels=labels )
+    axis(side=4, at=seq(0,200,50), labels=seq(0,200,50) )
     
     ######################################################################
     #f = function(x) (x-min(x))/(max(x)-min(x))
-    f = function(x) ( x-min(rmse)+min(rmse_se) ) / ( max(rmse)-min(rmse)+2*min(rmse_se) ) * ( max(m)-min(m) )
+    f = function(x) ( x-min(rmse) ) / ( max(rmse)-min(rmse) ) * ( max(m)-min(m) )
     
     rmse = sapply(score,function(x) mean(sqrt(x$mse)))
     rmse_se = sapply(score,function(x) {
@@ -178,7 +175,7 @@ barplot2 <- function(score)
     lines( barx, rmse2, col='darkred')
     arrows(barx , rmse_se1, barx , rmse_se2, angle=90, code=3, length=0.05, col='darkred')
     
-    labels=seq(floor(min(rmse)),ceiling(min(rmse)),0.2)
+    labels=seq(12,18,1)
     axis(side=2, at=f(labels), labels=labels, col='darkred' )
     
 }
@@ -187,24 +184,24 @@ barplot2 <- function(score)
 ################################################################################################
 ########## load data
 ################################################################################################
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
-load("MouseBrainHippo_spot_BIC_new_cells_on_spot.RData")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Wu_etal_2021_BRCA_scRNASeq")
+y = load("Wu_etal_2021_BRCA_scRNASeq_DWLS_Signature.RData")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/Visium_FFPE_Human_Breast_Cancer/DWLS_on_Wu_etal_2021_BRCA_Signature")
+x = load("Visium_FFPE_Human_Breast_Cancer_DWLS_on_Wu_etal_2021_BRCA_Signature.RData" )
 
-range = as.character( seq(0.5,7,0.5) )
-result = result[range]
+prop_mat = prop_mat[, !colnames(prop_mat)%in%c("Myeloid","PVL")]
+Signature = Signature[, match(colnames(prop_mat),colnames(Signature))]
 
-ratio=as.numeric(names(result))
-score = lapply( result, function(x) calculate_BIC(x,ST_expr) )
-rmse = sapply(score,function(x) mean(sqrt(x$mse)))
-bic = sapply(score, function(x) mean(x$bic))
-cell_count = sapply(score, function(x) mean(rowSums(x[[3]])) )
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+z = load("BreastCancer_spot_BIC_new_get_cells_on_spot.RData")
+
 
 ################################################################################################
 ############ draw barplot of RMSE
 ################################################################################################
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
 pdf("spot_size_comparison.pdf",w=5,h=5)
-barplot2(score)
+barplot2(score[ as.character(seq(0.5,7,0.5)) ])
 dev.off()
 
 
@@ -218,7 +215,6 @@ prop_on_spot = lapply(score, function(x) {
 
 rmse = sapply(score,function(x) mean(sqrt(x$mse)))
 ri = which.min(rmse)
-ri = 6
 ref = prop_on_spot[[ri]]
 
 dist = lapply(prop_on_spot, function(x) {
@@ -229,12 +225,13 @@ dist = lapply(prop_on_spot, function(x) {
     #sapply( 1:length(spots), function(i) cor(x2[i,], ref2[i,])^2 )
 }  )
 
+range = as.character( seq(0.5,7,0.5) )
+dist = dist[range]
 
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
 pdf('leaf_plot.pdf',w=6,h=6)
-title = paste0(names(dist),"x")
-leaf.plot(dist, upper=1:(ri-1), lower=(ri+1):length(dist), axis=TRUE, title=title, ref_title=title[ri])
-leaf.plot(dist, upper=1:(ri-1), lower=(ri+1):length(dist), axis=TRUE)
-leaf.plot(dist, upper=1:(ri-1), lower=(ri+1):length(dist), axis=FALSE)
+leaf.plot(dist, upper=1:5, lower=6:14, axis=TRUE, title=paste0(names(dist),"x"), ref_title="2.8x")
+leaf.plot(dist, upper=1:5, lower=6:14, axis=TRUE)
+leaf.plot(dist, upper=1:5, lower=6:14, axis=FALSE)
 dev.off()
 

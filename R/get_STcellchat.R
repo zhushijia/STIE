@@ -1,9 +1,10 @@
-#' get_cellchat
+#' get_STcellchat
 #'
 #' @param STIE_result 
+#' @param ST_expr 
 #' @param database 
 #' @param db_category 
-#' @param DEG_pthres 
+#' @param max_reps 
 #'
 #' @return
 #' @export
@@ -12,22 +13,21 @@
 #' 
 #' 
 #' 
-get_cellchat <- function(STIE_result, ST_expr, 
+get_STcellchat <- function(STIE_result, ST_expr, 
                          database=c("human","mouse"), 
                          db_category=c("Secreted Signaling"), 
-                         DEG_pthres=1e-5)
+                         max_reps=NULL )
 {
     # https://github.com/sqjin/CellChat
     # http://www.cellchat.org/
     
     if(0)
     {
-        STIE_result = result
+        #STIE_result = result
         database="human"
         db_category=NULL
-        DEG_pthres=1e-10  
+        max_reps=1000
     }
-    
     
     library(quadprog)
     library(CellChat)
@@ -35,7 +35,6 @@ get_cellchat <- function(STIE_result, ST_expr,
     library(patchwork)
     options(stringsAsFactors = FALSE)
     Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS=TRUE)
-    
     
     Signature = STIE_result$Signature
     cells_on_spot = STIE_result$cells_on_spot
@@ -51,7 +50,7 @@ get_cellchat <- function(STIE_result, ST_expr,
     PM_on_spot = t( apply( PM_on_spot, 1, function(x) x/sum(x) ) )
     all( rownames(PE_on_spot)==rownames(PM_on_spot) )
     
-    if(database=='human')  CellChatDB <- CellChatDB.human # use CellChatDB.mouse if running on mouse data
+    if(database=='human')  CellChatDB <- CellChatDB.human
     if(database=='mouse')  CellChatDB <- CellChatDB.mouse # use CellChatDB.mouse if running on mouse data
     #showDatabaseCategory(CellChatDB)
     
@@ -59,15 +58,6 @@ get_cellchat <- function(STIE_result, ST_expr,
         CellChatDB.use <- CellChatDB
     } else {
         CellChatDB.use <- subsetDB(CellChatDB, search=db_category) # use Secreted Signaling
-    }
-    
-    if(0)
-    {
-        gene.use_input <- extractGene(CellChatDB.use)
-        complex_input <- CellChatDB.use$complex
-        interaction_input <- CellChatDB.use$interaction
-        pairLR <- select(interaction_input, ligand, receptor)
-        LRgenes = setdiff( unique(c( unlist(complex_input), unlist(pairLR))), "" )
     }
     
     ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id, match(rownames(Signature),colnames(ST_expr)) ] )
@@ -88,66 +78,37 @@ get_cellchat <- function(STIE_result, ST_expr,
     rownames(coefs) = rownames(PE_on_spot)
     colnames(coefs) = colnames(Signature)
     
-    Signature3 = t( apply( ST_expr3, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+    Signature3 = t( apply( ST_expr3, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
     
-    ttest.2sample <- function( m1, sd1, n1, m2, sd2, n2 ) {
-        m = m1-m2
-        se = sqrt( sd1^2/n1 + sd2^2/n2 )
-        t = m/se
-        df = ( sd1^2/n1 + sd2^2/n2 )^2 / ( (sd1/n1)^2/(n1-1) + (sd2/n2)^2/(n2-1) )
-        p = pt( t, df=df, lower.tail=F )
-        # cat(m,se,t,df,p,"\n")
-        data.frame( m=m, m1=m1, m2=m2, t=t, df=df, p=p )
-    }
+    ######################################################################################################
+    ############## pseudo-data
+    ######################################################################################################
     
-    features.info = do.call(rbind, lapply( 1:nrow(ST_expr3), function(i) {
-        
-        cat(i,"\n")
-        y = log2(ST_expr3[i,]+1)
-        z = summary(lm( y ~ coefs-1 ))$coef
-        m0 = mean(y)
-        sd0 = sd(y)
-        n = colSums(coefs)
-        
-        info = do.call(rbind, lapply( 1:ncol(Signature), function(j) {
-            with( ttest.2sample( m1=z[j,1], sd1=sqrt( z[j,2]^2*n[j] ), n1=n[j], 
-                                m2=m0, sd2=sd0, n2=length(y) ), 
-                 data.frame( clusters = colnames(Signature)[j],
-                             features = rownames(ST_expr3)[i],
-                             logFC = m,
-                             pct.1 = m1,
-                             pct.2 = m2,
-                             pvalues = p))
-            
-        }))
-        
-        subset(info, pvalues<DEG_pthres)
-        
-    } ))
+    uni_cellid = unique(cell_id)
+    uni_cellid_celltypes = cell_types[ match( uni_cellid, names(cell_types) ) ]
+    num_celltypes = table(uni_cellid_celltypes)
     
-    features = unique(as.character(features.info$features))
-    var.features = list(features.info=features.info,
-                        features = features)
+    reps = num_celltypes[ match( colnames(Signature3), names(num_celltypes) ) ]
     
-    reps = 1000
-    data.input = Signature3[features,]
-    meta = data.frame(cluster=colnames(Signature3),labels=colnames(Signature3))
-    data.input = do.call(cbind, lapply(1:reps, function(i) data.input ) )
+    data.input = do.call(cbind, lapply( 1:ncol(Signature3), function(i) {
+            ni = ifelse( is.null(max_reps), reps[i], min(reps[i],max_reps) )
+            xi = Signature3[,i]
+            do.call(cbind, lapply(1:ni, function(j) xi ) )
+        } ) )
     colnames(data.input) = NULL
-    meta = do.call(rbind, lapply(1:reps, function(i) meta ) )
+    
+    meta = data.frame(cluster=rep(colnames(Signature3),reps),
+                      labels=rep(colnames(Signature3),reps) )
+    
+    ######################################################################################################
     
     cellchat <- createCellChat(object = data.input, meta = meta, group.by = "labels")
-    
     cellchat <- addMeta(cellchat, meta = meta)
     cellchat <- setIdent(cellchat, ident.use = "labels") # set "labels" as default cell identity
     
     cellchat@DB <- CellChatDB.use
-    
     cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
-    #future::plan("multiprocess", workers = 4) # do parallel
-    
-    cellchat@var.features = var.features
-    cellchat <- identifyOverExpressedInteractions(cellchat)
+    cellchat <- identifyOverExpressedInteractions(cellchat, features=rownames(Signature3))
     
     if(database=='human')  cellchat <- projectData(cellchat, PPI.human)
     if(database=='mouse')  cellchat <- projectData(cellchat, PPI.mouse)
@@ -157,12 +118,21 @@ get_cellchat <- function(STIE_result, ST_expr,
     
     cellchat <- computeCommunProbPathway(cellchat)
     cellchat <- aggregateNet(cellchat)
+    cellchat <- netAnalysis_computeCentrality(cellchat, slot.name = "netP")
     
-    groupSize <- as.numeric(table(cellchat@idents))
     par(mfrow = c(1,2), xpd=TRUE)
+    groupSize <- as.numeric(table(cellchat@idents))
     netVisual_circle(cellchat@net$count, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Number of interactions")
     netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
     
+    if(0)
+    {
+        ht1 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "outgoing")
+        ht2 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "incoming")
+        ht1[1:20,] + ht2[1:20,]
+    }
+    
     cellchat
+    
 }
 

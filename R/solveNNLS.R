@@ -10,7 +10,7 @@
 #' @examples
 #' 
 #' 
-solveOLS <- function(S, B, scaled=T) {
+solveNNLS <- function(S, B, scaled=T) {
     D<-t(S)%*%S
     d<-t(S)%*%B
     A<-cbind(diag(dim(S)[2]))

@@ -8,13 +8,35 @@ source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_b
 ## run deconvolution
 ############################################################
 
-cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2*spot_radius)
-
-result <- STIE(ST_expr, Signature, cells_on_spot, features, 
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.8*spot_radius)
+res_real <- STIE(ST_expr, Signature, cells_on_spot, features, 
                lambda=0, steps=30, 
                known_signature=known_signature, known_cell_types=known_cell_types)
 
-cell_types = result$cell_types
+STdata_sim <- simulate_STdata(cells_coordinates=res_real$cells_on_spot, 
+                              cell_types=res_real$cell_types, 
+                              Signature=res_real$Signature,
+                              spot_coordinates_ref=spot_coordinates, 
+                              spot_diameter_pixel_ref=spot_radius*2, 
+                              spot_size_ref=55, 
+                              spot_size_sim=5, 
+                              x_scale=args$x_scale )
+
+res_sim <- STIE(ST_expr=STdata_sim$ST_expr, Signature, 
+                 cells_on_spot=STdata_sim$cells_on_spot, 
+                 features, lambda=0, steps=30, 
+                 known_signature=known_signature, known_cell_types=known_cell_types)
+
+
+cells = unique(names(res_real$cell_types))
+cell_types_real = res_real$cell_types[ match(cells, names(res_real$cell_types)) ]
+cell_types_sim = res_sim$cell_types[ match(cells, names(res_sim$cell_types)) ]
+table(cell_types_real,cell_types_sim)
+
+
+
+
+cell_types = res_sim$cell_types
 contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
 
 #### selecte region

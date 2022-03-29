@@ -32,9 +32,9 @@ args = list()
 args$image = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Visium_FFPE_Mouse_Brain_image.jpg'
 args$feature_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/split_images2"
 
-args$spotfile = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/Visium_FFPE_Mouse_Brain/outs/spatial/tissue_positions_list.csv'
+args$spotfile = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/Visium_FFPE_Mouse_Brain/outs/spatial/tissue_positions_list.csv'
 
-args$spaceranger_count_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/Visium_FFPE_Mouse_Brain"
+args$spaceranger_count_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/Visium_FFPE_Mouse_Brain"
 scalefactor_paths <- paste( args$spaceranger_count_dir, "outs/spatial/scalefactors_json.json", sep="/")
 
 scales <- rjson::fromJSON(file = scalefactor_paths)
@@ -61,7 +61,7 @@ if(0) {
                 w=3000, h=3000, margin=100, x_scale=1 )
     run_imageJ_plugin(
         imageJ = "/archive/SCCC/Hoshida_lab/s184554/Code/github/ImageJ/Fiji.app/ImageJ-linux64",
-        plugin_macro = "/archive/SCCC/Hoshida_lab/s184554/Project/stRNAseq/Code/STIE/v1.5/data/DeepImageJ_plugin_multi_organ_3000_3000.fiji.ijm",
+        plugin_macro = NULL,
         split_image_dir = args$feature_dir, 
         pattern="jpg$" )
 }
@@ -119,11 +119,12 @@ if( deconvolution )
 {
     known_signature = TRUE
     known_cell_types = FALSE
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/allen_cortex")
-    x = load("AllenCortex_MouseBrain_scRNASeq_DWLS_Signature.RData")
-    Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
-    Signature = Signature/100
-    
+    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/BroadInstitute_SingleCell")
+    Signature = read.delim("Major_cell_types_marker_genes.txt", header=T, row.names=1)
+    Signature = Signature[,!colnames(Signature)%in%c("Ependymal.cells")]
+    Signature = as.matrix(Signature)[rownames(Signature)%in%colnames(ST_expr),]
+    colnames(Signature) = gsub("Pyramidal.neurons.|.interneurons|.like.cells|Granule.cells.", "", colnames(Signature))
+    Signature = Signature[,order(colnames(Signature))]
 }
 
 ############################################################
@@ -139,36 +140,5 @@ if( clustering )
     tmp_expr = ST_expr[ match(as.character(cluster[,1]),rownames(ST_expr)), ]
     Signature = t(apply(tmp_expr, 2, function(x) tapply(x,cluster[,2],mean) ))
 }
-
-############################################################
-# sub_level_signature
-############################################################
-if( sub_level_signature )
-{
-    known_signature = TRUE
-    known_cell_types = FALSE
-    
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/allen_cortex")
-    x = load("AllenCortex_MouseBrain_scRNASeq_DWLS_Signature.RData")
-    Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
-    Signature = Signature/100
-    
-    level1 = c("Endothelial","Endothelial","Endothelial",
-               "GABAergic","GABAergic","GABAergic","GABAergic","GABAergic","GABAergic","GABAergic",
-               "Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic",
-               "Non-Neuronal","Non-Neuronal","Non-Neuronal","Non-Neuronal")
-    level2 = c("Endo","Peri","SMC",
-               "Lamp5","Meis2","Pvalb","Serpinf1","Sncg","Sst","Vip",
-               "CR","L2or3","L4","L5","L5","L6","L6","L6","NP",
-               "Astro","Macrophage","Oligo","VLMC")
-    level3 = c("Endo","Peri","SMC",
-               "Lamp5","Meis2","Pvalb","Serpinf1","Sncg","Sst","Vip",
-               "CR","L2or3IT","L4","L5IT","L5PT","L6CT","L6IT","L6b","NP",
-               "Astro","Macrophage","Oligo","VLMC")
-    Signature_levels = data.frame(level1=level1,level2=level2,level3=level3)
-    Signature_levels = Signature_levels[ match( colnames(Signature), as.character(Signature_levels$level3)) , ]
-}
-
-
 
 

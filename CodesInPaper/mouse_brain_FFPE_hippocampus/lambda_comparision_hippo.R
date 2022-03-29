@@ -24,9 +24,48 @@ names(result) = las
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
 save(result, file="MouseBrainHippo_lambda.RData")
 
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
+load("MouseBrainHippo_lambda.RData")
 score = lapply( result, function(x) calculate_BIC(x,ST_expr) )
+
+PME_diff = lapply( result, function(res) {
+    PE_on_spot = res$PE_on_spot
+    PM_on_spot = apply(res$PM_on_cell, 2, function(x) tapply(x, as.character(res$cells_on_spot$spot), mean) )
+    PM_on_spot = t( apply(PM_on_spot,1,function(x)x/sum(x)) )
+    PM_on_spot = PM_on_spot[ match( rownames(PE_on_spot), rownames(PM_on_spot) ) , ]
+    rowSums((PE_on_spot-PM_on_spot)^2)
+} )
+
+errplot <- function(X)
+{
+    m <- sapply(X,function(x) mean(x) )
+    se <- sapply(X,function(x) {
+        sd(x)/sqrt(length(x))
+    } )
+    
+    barx = 1:length(m)
+    plot( m, type="l", ylim=range( c( m-se, m+se) ) )
+    axis(side=1,at=barx,label=names(X),las=3)
+    points( 1:length(m), m, pch=16, cex=1.5 )
+    arrows(barx , m+se, barx , m, angle=90, code=3, length=0.05)
+    arrows(barx , m-se, barx , m, angle=90, code=3, length=0.05)
+}
+
+par(mfrow=c(2,2))
+errplot( PME_diff )
+errplot( lapply(score, function(x) sqrt(x$mse) ) )
+
 rmse = sapply( score, function(x) mean(sqrt(x$mse)) )
-plot( rmse )
+
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/STIE")
+pdf("MouseBrainHippo_lambda_comparision.pdf",w=4,h=4)
+errplot(score)
+dev.off()
+
+
 
 
 
