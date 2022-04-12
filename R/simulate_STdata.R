@@ -70,10 +70,18 @@ simulate_STdata = function( cells_coordinates, cell_types, Signature,
             ind = which( d < (uni_cells$Major*x_scale+r) )
             n = length(ind)
             
-            if(n>0)
+            d2 = sqrt( (spot_coordinates_ref$pixel_x-x)^2 + (spot_coordinates_ref$pixel_y-y)^2 )
+            if ( any(d2<(1.5*spot_diameter_pixel_ref)) | n>0 )
             {
                 spot = data.frame(barcode=barcode, row=i, col=j, pixel_x=x, pixel_y=y, cell_count=n)
                 spot_coordinates_sim_i = rbind(spot_coordinates_sim_i, spot)
+            }
+            
+            if(n>0)
+            {
+                
+                #spot = data.frame(barcode=barcode, row=i, col=j, pixel_x=x, pixel_y=y, cell_count=n)
+                #spot_coordinates_sim_i = rbind(spot_coordinates_sim_i, spot)
                 
                 for( k in ind ) 
                 {

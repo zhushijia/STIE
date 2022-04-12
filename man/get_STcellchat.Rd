@@ -5,7 +5,8 @@
 \title{get_STcellchat}
 \usage{
 get_STcellchat(STIE_result, ST_expr, database = c("human", "mouse"),
-  db_category = c("Secreted Signaling"), max_reps = NULL)
+  db_category = c("Secreted Signaling"), max_reps = NULL,
+  nboot = 100, thresh = 0.05)
 }
 \arguments{
 \item{STIE_result}{}

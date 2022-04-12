@@ -19,6 +19,7 @@
 #' @param color_use 
 #' @param axis_tick 
 #' @param axis_col 
+#' @param spot_cols
 #'
 #' @return
 #' @export
@@ -27,9 +28,9 @@
 #' 
 #' 
 plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1, 
-                         plot_spot=F, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
+                         plot_spot=F, spot_radius=NULL, fct=0.25, spot_coordinates=NULL, spot_types=NULL,
                          plot_cell=T, contour=NULL, cell_types=NULL, cell_types_of_interest=unique(cell_types), 
-                         color_use=NULL, axis_tick=0, axis_col='grey' ) {
+                         color_use=NULL, axis_tick=0, axis_col='grey', spot_cols='white', fill_spot=FALSE ) {
     
    if( is.null(im) ) {
         cat("Reading", image, "...\n")
@@ -57,34 +58,33 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, 
     
     
     uni_celltypes = sort( unique(cell_types) )
-    num_celltypes = table(cell_types)
+    cellids = names(cell_types)
+    num_celltypes = table( cell_types[match(unique(cellids),cellids)] )
     num_celltypes = num_celltypes[ match(uni_celltypes, names(num_celltypes)) ]
     n = length(uni_celltypes)
     
     if(is.null(color_use))
     {
-        myCol = c( "green", "red", "black", "cyan", "yellow", "darkorange", "purple", "steelblue",
-                   "blue", "darkred", "grey", "blue4", "chartreuse4", "burlywood1", "darkgoldenrod4" )
-        
-        color_use = myCol[1:n]
+        color_use = get_my_colors(n, mode=2)
     }
     
     cell_cols = rep(1,length(cell_types))
     for(i in 1:n) cell_cols[cell_types==uni_celltypes[i]] = color_use[i]
     
-    spot_cols = rep(0,length(spot_types))
-    for(i in 1:n) spot_cols[spot_types==uni_celltypes[i]] = color_use[i]
+    #spot_cols = rep(0,length(spot_types))
+    #for(i in 1:n) spot_cols[spot_types==uni_celltypes[i]] = color_use[i]
     
     mat1 <- matrix(1:2, ncol=2, nrow=1)
     layout(mat1, widths=c(8, 2), heights=c(1, 2))
     
-    if( image_transparency>=0 & image_transparency<1 ) 
+    if( image_transparency>=0 & image_transparency<=1 ) 
     {
         im <- (1-image_transparency)*im + image_transparency*(im*0+1)
         display(im,method='raster')
     }
     
-    if(plot_spot) plot_spot_info(spot_coordinates, xoff, yoff, x_scale, barcode=F, fct=fct) 
+    if(plot_spot) plot_spot_info(spot_coordinates, w, h, xoff, yoff, x_scale, spot_cols=spot_cols, barcode=F, 
+                                 spot_radius=spot_radius, fct=fct, fill_spot=fill_spot) 
     
     if( axis_tick>0 )
     {
@@ -107,7 +107,7 @@ plot_sub_image <- function(im=NULL, im_path=NULL, image_transparency=0, w=NULL, 
         par(mar = c(0, 0, 0, 0))
         plot.new()
         legend = paste0(uni_celltypes," (", num_celltypes ,")" )
-        legend('topleft', legend=legend, pch=1, col=color_use, 
+        legend('topleft', legend=legend, pch=16, col=color_use, 
                box.lwd = 0, box.col = "white",bg = "white" )
     }
     
@@ -134,8 +134,8 @@ plot_cell_contour = function(contour, cell_coordinates, w, h, xoff, yoff, x_scal
 }
 
 
-plot_spot_info <- function(spot_coordinates, xoff, yoff, x_scale, 
-                           spot_cols='green', barcode=T, fct=0.25)
+plot_spot_info <- function(spot_coordinates, w=NULL, h=NULL, xoff=0, yoff=0, x_scale, 
+                           spot_cols='white', barcode=T, spot_radius=NULL, fct=0.25, fill_spot=FALSE)
 {
 
     if(length(spot_cols)==1) spot_cols = rep( spot_cols, nrow(spot_coordinates) )
@@ -153,11 +153,22 @@ plot_spot_info <- function(spot_coordinates, xoff, yoff, x_scale,
     
     if( all(c("imagecol","imagerow") %in% colnames(spot_coordinates)) )
     {
+        
+        if( !is.null(w) & !is.null(h) ) {
+            spot_coordinates = subset(spot_coordinates, 
+                                      imagecol>=xoff & imagecol<=(xoff+w) &
+                                      imagerow>=yoff & imagerow<=(yoff+h) )
+        }
         spot_coordinates$pixel_x = (spot_coordinates$imagecol-xoff)*x_scale
         spot_coordinates$pixel_y = (spot_coordinates$imagerow-yoff)*x_scale
     }
     
-    spot_radius <- calculate_spot_radius(spot_coordinates, fct)
+    if( is.null(spot_radius) ) {
+        spot_radius <- calculate_spot_radius(spot_coordinates, fct)
+    } else {
+        spot_radius <- spot_radius * x_scale
+    }
+    cat("spot_radius:", spot_radius,"\n")
     
     for(i in 1:nrow(spot_coordinates)) {
         
@@ -165,7 +176,12 @@ plot_spot_info <- function(spot_coordinates, xoff, yoff, x_scale,
         y = as.numeric(spot_coordinates[i, "pixel_y"])
         r = spot_radius
         c = spot_cols[i]
-        plot_circle(x, y, r, 'white')
+        if(fill_spot) {
+            library(plotrix)
+            draw.circle(x, y, r, col=c, border=c)
+        } else {
+            plot_circle(x, y, r, c)
+        }
         
         #text(x, y-r, as.character(spot_coordinates$barcode[i]) )
         if(barcode) text(x, y-r, rownames(spot_coordinates)[i])

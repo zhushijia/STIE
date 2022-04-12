@@ -29,14 +29,13 @@ library("doParallel")
 library("STIE")
 
 args = list()
-args$image = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Visium_FFPE_Human_Breast_Cancer_image_resave_imageJ.jpg'
-args$feature_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Visium_FFPE_Human_Breast_Cancer_split_images2"
+args$image = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Visium_FFPE_Mouse_Brain_image.jpg'
+args$feature_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/split_images2"
 
-args$spotfile = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/Visium_FFPE_Human_Breast_Cancer/outs/spatial/tissue_positions_list.csv'
+args$spotfile = '/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex2/Visium_FFPE_Mouse_Brain/outs/spatial/tissue_positions_list.csv'
 
-args$spaceranger_count_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/Visium_FFPE_Human_Breast_Cancer"
+args$spaceranger_count_dir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex2/Visium_FFPE_Mouse_Brain"
 scalefactor_paths <- paste( args$spaceranger_count_dir, "outs/spatial/scalefactors_json.json", sep="/")
-matrix_paths <- paste( args$spaceranger_count_dir, "outs/filtered_feature_bc_matrix.h5", sep="/")
 
 scales <- rjson::fromJSON(file = scalefactor_paths)
 args$x_scale = scales$tissue_lowres_scalef
@@ -52,7 +51,7 @@ features = c("Area", "Round")
 ############################################################
 ########## read image
 ############################################################
-im <- image_read(args$image)
+im <- image_read(args$image, args$croparea, args$x_scale)
 
 ############################################################
 ########## split image
@@ -96,16 +95,18 @@ spot_coordinates <- data.frame( spot_coordinates,
 
 spot_radius <- calculate_spot_radius(spot_coordinates, fct)
 
-
 ############################################################
 ########## load 10X transcriptome
 ############################################################
 cat("load 10X transcriptome...\n")
 
-count <- as.data.frame(t(Read10X_h5(matrix_paths)))
+STdata = load_STdata( "Visium_FFPE_Mouse_Brain", args$spaceranger_count_dir, umi_cutoff=0, is_normalized=FALSE ) 
+bcs <- STdata$bcs_merge
+count = STdata$matrix[[1]]
 
-spot_coordinates <- subset(spot_coordinates, barcode%in%rownames(count) )
+spot_coordinates <- subset(spot_coordinates, barcode%in%as.character(bcs$barcode) )
 ST_expr = count[match( as.character(spot_coordinates$barcode), rownames(count) ),]
+
 
 ############################################################
 ######## modes
@@ -118,15 +119,11 @@ if( deconvolution )
 {
     known_signature = TRUE
     known_cell_types = FALSE
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Wu_etal_2021_BRCA_scRNASeq")
-    y = load("Wu_etal_2021_BRCA_scRNASeq_DWLS_Signature.RData")
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/Visium_FFPE_Human_Breast_Cancer/DWLS_on_Wu_etal_2021_BRCA_Signature")
-    x = load("Visium_FFPE_Human_Breast_Cancer_DWLS_on_Wu_etal_2021_BRCA_Signature.RData" )
+    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/allen_cortex")
+    x = load("AllenCortex_MouseBrain_scRNASeq_DWLS_Signature.RData")
+    Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
+    Signature = Signature/100
     
-    #prop_mat = prop_mat[, !colnames(prop_mat)%in%c("Myeloid","PVL")]
-    #Signature = Signature[, match(colnames(prop_mat),colnames(Signature))]
-    #prop_mat = prop_mat[match(rownames(ST_expr),rownames(prop_mat)),]
-    #Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
 }
 
 ############################################################
@@ -144,40 +141,34 @@ if( clustering )
 }
 
 ############################################################
-# UNKNOWN signature, known cell types and known cell segmentation
+# sub_level_signature
 ############################################################
-if( signature_learning )
+if( sub_level_signature )
 {
-    known_signature = FALSE
-    known_cell_types = TRUE
-    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/")
-    cells = data.frame(fread("Breast_Cancer_FFPE_information_model40_image20.csv"))
-    morphology_fts = with(cells, data.frame(
-        cell_id = paste0("cell_",rownames(cells)),
-        cell_types=nucleus_class,
-        probability=probability,
-        X=centroid_x0,
-        Y=centroid_y0,
-        Area=area,
-        Major=major_axis_length,
-        Minor=minor_axis_length,
-        Eccentricity=eccentricity,
-        Orientation=orientation,
-        Solidity=solidity) )
-    #morphology_fts = subset(morphology_fts, ! cell_types %in% c("blood") )
-    morphology_fts = morphology_fts[order(morphology_fts$probability,decreasing=T),]
-    morphology_fts = subset(morphology_fts,probability>0.1)
-    morphology_fts$pixel_x = morphology_fts$X * args$x_scale
-    morphology_fts$pixel_y = morphology_fts$Y * args$x_scale
-    if(1) {
-        cell_types2 = as.character(morphology_fts$cell_types)
-        cell_types2[cell_types2%in%c("tumor", "necrosis", "ductal epithelium")] = "Epithelia"
-        cell_types2[cell_types2%in%c("lymphocyte", "macrophage")] = "Immune"
-        cell_types2[cell_types2%in%c("stroma")] = "Stroma"
-        morphology_fts$cell_types = cell_types2
-    }
-
+    known_signature = TRUE
+    known_cell_types = FALSE
+    
+    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/allen_cortex")
+    x = load("AllenCortex_MouseBrain_scRNASeq_DWLS_Signature.RData")
+    Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
+    Signature = Signature/100
+    
+    level1 = c("Endothelial","Endothelial","Endothelial",
+               "GABAergic","GABAergic","GABAergic","GABAergic","GABAergic","GABAergic","GABAergic",
+               "Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic","Glutamatergic",
+               "Non-Neuronal","Non-Neuronal","Non-Neuronal","Non-Neuronal")
+    level2 = c("Endo","Peri","SMC",
+               "Lamp5","Meis2","Pvalb","Serpinf1","Sncg","Sst","Vip",
+               "CR","L2or3","L4","L5","L5","L6","L6","L6","NP",
+               "Astro","Macrophage","Oligo","VLMC")
+    level3 = c("Endo","Peri","SMC",
+               "Lamp5","Meis2","Pvalb","Serpinf1","Sncg","Sst","Vip",
+               "CR","L2or3IT","L4","L5IT","L5PT","L6CT","L6IT","L6b","NP",
+               "Astro","Macrophage","Oligo","VLMC")
+    Signature_levels = data.frame(level1=level1,level2=level2,level3=level3)
+    Signature_levels = Signature_levels[ match( colnames(Signature), as.character(Signature_levels$level3)) , ]
 }
+
 
 
 

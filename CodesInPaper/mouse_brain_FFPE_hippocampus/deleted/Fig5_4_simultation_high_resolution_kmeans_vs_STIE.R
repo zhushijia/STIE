@@ -1,18 +1,45 @@
 deconvolution = TRUE
-clustering = FALSE
-signature_learning = FALSE
+source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/mouse_brain_FFPE_hippocampus/parameters_hippo3.R")
 
-source("/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/human_breast_cancer_FFPE/parameter_BreastCancer.R")
+############################################################
+## deconvolution on multiorgan
+############################################################
 
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-x = load("HumanBreastCancer_clustering.RData")
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.5*spot_radius)
+
+STIE_result <- STIE(ST_expr, Signature, cells_on_spot, features, 
+               lambda=0, steps=30, 
+               known_signature=TRUE, known_cell_types=FALSE)
+
+if(1) {
+    
+    cells_on_spot$cell_types = result$cell_types
+    spot_id = as.character(cells_on_spot$spot)
+    cell_id = as.character(cells_on_spot$cell_id)
+    ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id,  ] )
+    
+    coefs = table( as.character(cells_on_spot$spot), as.character(cells_on_spot$cell_types) )
+    coefs = coefs[match( colnames(ST_expr2), rownames(coefs) ), ]
+    Signature_sim = t( apply( ST_expr2, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
+    STIE_result$Signature = Signature_sim
+}
+
+STdata_sim <- simulate_STdata(cells_coordinates=STIE_result$cells_on_spot, 
+                              cell_types=STIE_result$cell_types, 
+                              Signature=STIE_result$Signature,
+                              spot_coordinates_ref=spot_coordinates, 
+                              spot_diameter_pixel_ref=spot_radius*2, 
+                              spot_size_ref=55, 
+                              spot_size_sim=5, 
+                              x_scale=args$x_scale )
 
 
-# https://www.calculator.net/triangle-calculator.html?vc=60&vx=10&vy=20&va=&vz=18&vb=&angleunits=d&x=124&y=18
-# https://mathworld.wolfram.com/Circle-CircleIntersection.html
+
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/STIE")
+load("MouseBrainHippocampus_clustering_2.5Xspot.RData")
 
 
-STIE_result = result[[6]]
+
 ri=5
 
 simulate_STdata = function( STIE_result, spot_coordinates, ri=5 )
@@ -113,8 +140,7 @@ simulate_STdata = function( STIE_result, spot_coordinates, ri=5 )
     
 }
 
-
-setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/STIE")
 save(STdata_sim, file=paste0("STdata_sim_radius",ri,"nm_STIEcluster",i,".RData") )
 
 ##########################################################################################
@@ -128,9 +154,9 @@ x=with(cells_on_spot_sim, table(spot, cell_types))
 (y = table(apply(x,1,function(a)sum(a>0))))
 barplot(y)
 
-X = kmeans(ST_expr_sim, 6)
+X = kmeans(ST_expr_sim, k)
 Signature_sim = t( apply(ST_expr_sim, 2, function(x) tapply(x,X$cluster,mean) ))
-prop=lapply( 1:6, function(i) solveOLS( Signature, as.matrix(Signature_sim[,i]) ) )
+prop=lapply( 1:k, function(i) solveNNLS( Signature, as.matrix(Signature_sim[,i]) ) )
 data.frame(sapply(prop,which.max),sapply(prop,max))
 lapply(prop,sort,decreasing=T)
 
@@ -166,15 +192,72 @@ res = STIE(ST_expr_sim, Signature_sim, cells_on_spot_sim, features,
 
 X = kmeans(ST_expr_sim, 6)
 Signature_sim = t( apply(ST_expr_sim, 2, function(x) tapply(x,X$cluster,mean) ))
-prop=lapply( 1:6, function(i) solveOLS( Signature, as.matrix(Signature_sim[,i]) ) )
+prop=lapply( 1:6, function(i) solveNNLS( Signature, as.matrix(Signature_sim[,i]) ) )
 data.frame(sapply(prop,which.max),sapply(prop,max))
 lapply(prop,sort,decreasing=T)
 
 
 Signature = result[[6]]$Signature
-prop=lapply( 1:6, function(i) solveOLS( Signature, as.matrix(res$Signature[,i]) ) )
+prop=lapply( 1:6, function(i) solveNNLS( Signature, as.matrix(res$Signature[,i]) ) )
 data.frame(sapply(prop,which.max),sapply(prop,max))
 lapply(prop,sort,decreasing=T)
+
+
+
+
+
+
+
+
+
+
+
+##########################################################################################
+
+
+
+
+k = 5
+STIE_result = results[[k]]
+Signature_sim = STIE_result$Signature
+ST_expr_sim = STdata_sim$ST_expr_sim
+cells_on_spot_sim = STdata_sim$cells_on_spot_sim
+
+##########################################################################################
+k=6
+Km = kmeans(ST_expr_sim, k)
+Signature_kmeans = t( apply(ST_expr_sim, 2, function(x) tapply(x,Km$cluster,mean) ))
+prop_kmeans = lapply( 1:ncol(Signature_kmeans), function(i) solveNNLS( Signature_sim, Signature_kmeans[,i] ) )
+data.frame(sapply(prop_kmeans,which.max),sapply(prop_kmeans,max))
+lapply(prop_kmeans,sort,decreasing=T)
+
+stie = STIE(ST_expr_sim, Signature_kmeans, cells_on_spot_sim, features, 
+           lambda=1e3, steps=30, 
+           known_signature=FALSE, known_cell_types=FALSE)
+Signature_stie = stie$Signature
+##########################################################################################
+
+prop_kmeans = lapply( 1:ncol(Signature_kmeans), function(i) solveNNLS( Signature_sim, Signature_kmeans[,i] ) )
+data.frame(sapply(prop_kmeans,which.max),sapply(prop_kmeans,max))
+lapply(prop_kmeans,sort,decreasing=T)
+
+prop_stie = lapply( 1:ncol(Signature_stie), function(i) solveNNLS( Signature_sim, Signature_stie[,i] ) )
+data.frame(sapply(prop_stie,which.max),sapply(prop_stie,max))
+lapply(prop_stie,sort,decreasing=T)
+
+
+##########################################################################################
+real_cluster = with( cells_on_spot_sim, tapply(cell_types, spot, function(x) paste(sort(unique(x)),collapse="_") ))
+sim_cluster = Km$cluster
+sim_cluster = sim_cluster[ match( names(real_cluster), names(sim_cluster) ) ]
+table(real_cluster, sim_cluster)
+
+
+
+
+
+
+
 
 
 

@@ -36,12 +36,14 @@ table2df <- function(t) {
 ############################################################
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-load("HumanBreastCancer_clustering.RData")
-stie_clustering = result
+#x = load("HumanBreastCancer_clustering_2.5xSpot.RData")
+x = load("HumanBreastCancer_clustering_2.5xSpot_lambda1000.RData")
+stie_clustering = results
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-load("BreastCancer_spot_BIC_new_get_cells_on_spot.RData")
-stie_deconvolution = result
+#x2 = load("BreastCancer_spot_new_get_cells_on_spot_full_signature.RData")
+x2 = load("BreastCancer_lambda_comparison_2.5xSpot_fullSignature_2500.RData")
+stie_deconvolution = results
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/Wu_etal_2021_BRCA_scRNASeq")
 y = load("Wu_etal_2021_BRCA_scRNASeq_DWLS_Signature.RData")
@@ -86,9 +88,9 @@ for(i in 2:10)
     bs_signature = bs_signature[match(genes,rownames(bs_signature)), ]
     stie_signature = stie_signature[match(genes,rownames(stie_signature)), ]
     
-    kmeans_ols = apply( kmeans_signature, 2, function(b) solveOLS( sc_signature, b ) )
-    bs_ols = apply( bs_signature, 2, function(b) solveOLS( sc_signature, b ) )
-    stie_ols = apply( stie_signature, 2, function(b) solveOLS( sc_signature, b ) )
+    kmeans_ols = apply( kmeans_signature, 2, function(b) solveNNLS( sc_signature, b ) )
+    bs_ols = apply( bs_signature, 2, function(b) solveNNLS( sc_signature, b ) )
+    stie_ols = apply( stie_signature, 2, function(b) solveNNLS( sc_signature, b ) )
     
     kmeans_dwls = dwls(S=sc_signature, B=kmeans_signature)
     bs_dwls = dwls(S=sc_signature, B=bs_signature)
@@ -136,7 +138,7 @@ for(i in 2:10)
     
     ############################################################
     if(1) {
-        de_i = stie_deconvolution[['2']]
+        de_i = stie_deconvolution[['2.5']]
         cl_i = stie_clustering[[i]]
         
         cells = unique( intersect( names(de_i$cell_types), names(cl_i$cell_types) ) )
@@ -164,8 +166,7 @@ for(i in 2:10)
     cell_types = cl_i$cell_types
     contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
     
-    colors = c("steelblue",'darkgreen',"sienna1",'mediumpurple','darkred','brown')
-    colors = c("steelblue",'darkgreen',"darkorange",'darkred','purple','brown')
+    colors = c("steelblue",'darkgreen',"darkorange",'yellow','cyan','darkred')
     
     plot_sub_image(im=im, image_transparency=0,
                    x_scale=args$x_scale, spot_coordinates=spot_coordinates, 

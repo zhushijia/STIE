@@ -4,7 +4,7 @@ library(SingleCellExperiment)
 library(ggplot2)
 library(BayesSpace)
 
-sce <- readVisium("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/Visium_FFPE_Mouse_Brain/outs")
+sce <- readVisium("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/Visium_FFPE_Mouse_Brain/outs")
 set.seed(102)
 ST <- spatialPreprocess(sce, platform="ST", n.PCs=7, n.HVGs=2000, log.normalize=TRUE)
 ST <- qTune(ST, qs=seq(2, 10), platform="ST", d=7)
@@ -25,6 +25,8 @@ ST.enhanced <- spatialEnhance(ST, q=Qn, platform="ST", d=7,
                             save.chain=TRUE)
 
 ################################################################################################
+####### Signature
+################################################################################################
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/BroadInstitute_SingleCell")
 Signature = read.delim("Major_cell_types_marker_genes.txt", header=T, row.names=1)
 Signature = Signature[,!colnames(Signature)%in%c("Ependymal.cells")]
@@ -34,14 +36,14 @@ ST.enhanced <- enhanceFeatures(ST.enhanced, ST,
                                feature_names=markers,
                                nrounds=0)
 
-outputDir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/BayesSpace"
+outputDir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/BayesSpace"
 #dir.create(outputDir)
 setwd(outputDir)
 save(ST.enhanced,file="ST_enhanced.RData")
 
 ################################################################################################
 
-outputDir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/results/BayesSpace"
+outputDir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/BayesSpace"
 setwd(outputDir)
 x = load("ST_enhanced.RData")
 bs_enhanced = ST.enhanced
@@ -52,6 +54,8 @@ Signature = Signature[,!colnames(Signature)%in%c("Ependymal.cells")]
 
 for(i in 2:10)
 {
+    
+    # i = i + 1
     cat(i,"\n")
     set.seed(149)
     bs_enhanced <- spatialCluster(bs_enhanced, q=i, 
@@ -80,15 +84,24 @@ for(i in 2:10)
     setwd(outdirI)
     save( counts, cluster, file=paste0("cluster",i,".RData") )
     
-    pdf( paste0("cluster",i,".pdf"), 20, 20 )
-    cols = c('cyan','blue','purple','green','yellow','orange','red','black')
-    #clusterPlot(bs_enhanced, palette=cols)
+    pdf( paste0("cluster",i,".pdf") )
     clusterPlot(bs_enhanced, color="black") +
         theme_bw() +
         xlab("Column") +
         ylab("Row") +
         labs(fill="BayesSpace\ncluster", title="Spatial clustering of ST_mel1_rep2")
     dev.off()
+    
+    if(i==5) {
+        pdf( paste0("cluster",i,"_for_figure.pdf") )
+        cols = c('orange','blue','green','magenta','black')
+        clusterPlot(bs_enhanced, palette=cols)
+        dev.off()
+    }
+        
+    
+    
+    
     
 }
 

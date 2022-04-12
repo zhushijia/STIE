@@ -7,7 +7,7 @@ source("/archive/SCCC/Hoshida_lab/s184554/Project/stRNAseq/DWLS/Deconvolution_fu
 
 workdir = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/Signature/BroadInstitute_SingleCell"
 
-matrix_paths = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hipocampus/Visium_FFPE_Mouse_Brain/outs/filtered_feature_bc_matrix.h5"
+matrix_paths = "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/Visium_FFPE_Mouse_Brain/outs/filtered_feature_bc_matrix.h5"
 dataST <- as.matrix(t(Read10X_h5(matrix_paths)))
 
 setwd(workdir)
@@ -46,7 +46,9 @@ for (s in 1:n_spots) {
     prop_mat[s,names(solDWLS)] <- solDWLS
 }
 
-setwd(workdir)
+outputDir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/DWLS"
+dir.create(outputDir)
+setwd(outputDir)
 save(prop_mat, file="Visium_FFPE_Mouse_Brain_hippocampus_DWLS_on_BroadInstitute_Signature.RData" )
 
 

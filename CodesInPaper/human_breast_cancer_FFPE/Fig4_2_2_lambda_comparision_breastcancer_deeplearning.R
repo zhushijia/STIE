@@ -31,22 +31,43 @@ morphology_fts$pixel_y = morphology_fts$Y * args$x_scale
 features = c("Area", "Eccentricity")
 
 ############################################################
-# run on different spot size
+# lambda
 ############################################################
-#ratio = sort( c(0.5,seq(1,3,0.2),seq(1.5,8,1),seq(4,8,1)) )
-ratio = seq(0.5,8,0.5)
-result = list()
-for(i in 1:length(ratio))
+las = sort( unique(c( 0, 10^c(-1:6) )) )
+
+results = list()
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.5*spot_radius)
+
+for(i in 1:length(las))
 {
-    cat(ratio[i],'\n')
-    cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, ratio[i]*spot_radius)
-    result[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=0, steps=30, 
-                     known_signature=TRUE, known_cell_types=FALSE)
+    cat(las[i],'\n')
+    results[[i]] = STIE(ST_expr, Signature, cells_on_spot, features, lambda=las[i], steps=30, 
+                        known_signature=TRUE, known_cell_types=FALSE, min_cells=-1)
 }
 
-score = lapply( result, function(x) calculate_BIC(x, ST_expr) )
-names(result) = names(score) = ratio
+score = lapply( results, function(x) calculate_BIC(x, ST_expr) )
+names(results) = names(score) = las
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-save(result, score, file=paste0("BreastCancer_spot_DL_CellSegmentation_thres",thres,".RData") )
+save(results, score, file=paste0("BreastCancer_lambda_comparison_2.5xSpot_fullSignature_DL_thres",thres,".RData") )
+
+
+########################################################################################################################
+####### Visualization
+########################################################################################################################
+thres = 0
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+load( paste0("BreastCancer_lambda_comparison_2.5xSpot_fullSignature_DL_thres",thres,".RData") )
+PME_diff = get_PME_diff(results) 
+
+################################################################################################
+############ draw barplot of RMSE
+################################################################################################
+pdf( paste0("BreastCancer_lambda_comparison_2.5xSpot_fullSignature_DL_thres",thres,".pdf") )
+par(mfrow=c(2,2))
+errplot( PME_diff, "PME_diff" )
+errplot( lapply(score, function(x) sqrt(x$mse) ), "RMSE" )
+errplot( lapply(score, function(x) x$bic ), "BIC" )
+dev.off()
+
 

@@ -40,11 +40,18 @@ x = load("Visium_FFPE_Human_Breast_Cancer_DWLS_on_Wu_etal_2021_BRCA_Signature.RD
 ## deconvolution on multiorgan
 ############################################################
 
-cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.8*spot_radius)
-
-result <- STIE(ST_expr, Signature, cells_on_spot, features, 
-               lambda=0, steps=30, 
-               known_signature=TRUE, known_cell_types=FALSE)
+if(0) {
+    cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.5*spot_radius)
+    
+    result <- STIE(ST_expr, Signature, cells_on_spot, features, 
+                     lambda=1e3, steps=30, 
+                     known_signature=known_signature, known_cell_types=known_cell_types, min_cells=-1)
+} else {
+    setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+    load( "BreastCancer_lambda_comparison_2.5xSpot_fullSignature.RData")
+    result = results[['1000']]
+    cells_on_spot = result$cells_on_spot
+}
 
 ################################################################################
 
@@ -56,21 +63,31 @@ ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id, match(rownames(Signature),c
 
 coefs = table( as.character(cells_on_spot$spot), as.character(cells_on_spot$cell_types) )
 coefs = coefs[match( colnames(ST_expr2), rownames(coefs) ), ]
-Signature2 = t( apply( ST_expr2, 1, function(x) solveOLS( coefs, as.matrix(x), scaled=F ) ) )
+Signature2 = t( apply( ST_expr2, 1, function(x) solveNNLS( coefs, as.matrix(x), scaled=F ) ) )
 
-cc = data.frame( celltypes = c( "Plasmablasts", "Bcells",  "Tcells",    "Myeloid",      "CAFs",  "Endothelial",  "PVL", "CancerEpithelial", "NormalEpithelial"), 
-                      cols = c( "cyan",    "steelblue", "darkgreen", "darkorange",  "purple",  "darkred",     "yellow",   "black", "grey") )
+cc = data.frame(celltypes = c("Plasmablasts","Bcells", "Tcells", "Myeloid", 
+                              "Endothelial", "CAFs", "PVL", 
+                              "NormalEpithelial", "CancerEpithelial"),
+                colors = c( "#4DAF4A", "darkorange", "steelblue", "yellow", 
+                            "cyan", "darkred", "purple",
+                            "grey", "black" ) )
 
 Signature = Signature[, intersect(as.character(cc$celltypes),colnames(Signature)) ]
 Signature2 = Signature2[, intersect(as.character(cc$celltypes),colnames(Signature2)) ]
 
-prop2 = apply( Signature2, 2, function(x) solveOLS(Signature,x) )  
+prop2 = apply( Signature2, 2, function(x) solveNNLS(Signature,x) )  
 corr2 = cor(log2(Signature2+1),log2(Signature+1))
 prop_dwls2 = dwls(S=Signature, B=Signature2)
 
-barplot(prop2, col=as.character(cc$cols), las=3, border='white')
-barplot(prop_dwls2, col=as.character(cc$cols), las=3, border='white')
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+write.table( data.frame(celltype=rownames(corr2),corr2), "BreastCancer_signature_learning_corr.txt", sep="\t", col.names=T, row.names=F, quote=F )
+
+pdf("BreastCancer_signature_learning.pdf")
+par(mfrow=c(2,2))
+barplot(prop2, col=as.character(cc$colors), las=3, border='white', main="NNLS", ylab='prop')
+barplot(prop_dwls2, col=as.character(cc$colors), las=3, border='white', main="DWLS", ylab='prop')
 heatmap(corr2,Colv=NA,Rowv=NA)
+dev.off()
 
 ############################################################
 ## deconvolution on HD staining 
@@ -92,12 +109,12 @@ morphology_fts = with(cells, data.frame(
     Solidity=solidity) )
 #morphology_fts = subset(morphology_fts, ! cell_types %in% c("blood") )
 morphology_fts = morphology_fts[order(morphology_fts$probability,decreasing=T),]
-morphology_fts = subset(morphology_fts,probability>0.5)
+#morphology_fts = subset(morphology_fts,probability>0.5)
 morphology_fts$pixel_x = morphology_fts$X * args$x_scale
 morphology_fts$pixel_y = morphology_fts$Y * args$x_scale
 
 ############################################################
-cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.8*spot_radius)
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.5*spot_radius)
 spot_id = as.character(cells_on_spot$spot)
 cell_id = as.character(cells_on_spot$cell_id)
 Signature = Signature[rownames(Signature)%in%colnames(ST_expr),]
@@ -109,14 +126,19 @@ Signature3 = t( apply( ST_expr2, 1, function(x) solveNNLS( coefs, as.matrix(x), 
 
 Signature3 = Signature3[, c( "blood", "lymphocyte", "macrophage", "stroma", "tumor", "ductal epithelium", "necrosis" ) ]
 
-prop3 = apply( Signature3, 2, function(x) solveOLS(Signature,x) )  
+prop3 = apply( Signature3, 2, function(x) solveNNLS(Signature,x) )  
 corr3 = cor(log2(Signature3+1),log2(Signature+1))
 prop_dwls3 = dwls(S=Signature, B=Signature3)
 
+setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
+write.table( data.frame(celltype=rownames(corr3),corr3), "BreastCancer_signature_learning_corr_DL.txt", sep="\t", col.names=T, row.names=F, quote=F )
+
+pdf("BreastCancer_signature_learning_DL.pdf")
 par(mfrow=c(2,2))
-barplot(prop3, col=as.character(cc$cols), las=3, border='white')
-barplot(prop_dwls3, col=as.character(cc$cols), las=3, border='white')
+barplot(prop3, col=as.character(cc$colors), las=3, border='white', main="NNLS", ylab='prop')
+barplot(prop_dwls3, col=as.character(cc$colors), las=3, border='white', main="DWLS", ylab='prop')
 heatmap(corr3,Colv=NA,Rowv=NA)
+dev.off()
 
 
 

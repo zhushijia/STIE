@@ -1,0 +1,83 @@
+#' calculate_RMSE
+#'
+#' @param STIE_result 
+#' @param ST_expr 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+#' data = mtcars[,c("disp","hp")]
+#' model1 <- lm(mpg ~ disp + hp, data = mtcars)
+#' l = sum(log(dnorm(r,sd=sd(r))))
+#' d = ncol(data) + 2
+#' n = nrow(data)
+#' bic = -2*l + d*log(n)
+#' 
+calculate_RMSE <- function(STIE_result, ST_expr, Signature=NULL)
+{
+    cells_on_spot = STIE_result$cells_on_spot
+    spot_id = as.character(cells_on_spot$spot)
+    cell_id = as.character(cells_on_spot$cell_id)
+    
+    PM_on_cell = STIE_result$PM_on_cell
+    PE_on_spot = STIE_result$PE_on_spot
+    PM_on_spot = apply(PM_on_cell, 2, function(x) tapply(x,spot_id,sum) )
+    PM_on_spot = PM_on_spot[ match(rownames(PE_on_spot),rownames(PM_on_spot)), ]
+    if(is.null(Signature)) Signature = STIE_result$Signature
+    cell_types = STIE_result$cell_types
+    
+    celltypes_on_spot = table(spot_id, cell_types)
+    
+    if( ncol(celltypes_on_spot) < ncol(Signature) )
+    {
+        missed = setdiff( colnames(Signature), colnames(celltypes_on_spot)  )
+        tmp = matrix(nrow=nrow(celltypes_on_spot), ncol=length(missed),data=0)
+        colnames(tmp) = missed
+        celltypes_on_spot = cbind(celltypes_on_spot, tmp ) 
+    }
+    
+    celltypes_on_spot = celltypes_on_spot[, match( colnames(Signature), colnames(celltypes_on_spot) )]
+    #celltypes_on_spot = t(apply(celltypes_on_spot,1,function(x)x/sum(x)))
+    
+    X = Signature
+    #B = t(apply(celltypes_on_spot,1,function(x)x/sum(x)))
+    B = celltypes_on_spot
+    Y = t(ST_expr)
+    X = X[rownames(X)%in%rownames(Y), ]
+    Y = Y[ , colnames(Y)%in%rownames(B) ]
+    Y = Y[ , match(rownames(B),colnames(Y)) ]
+    Y = Y[ match(rownames(X),rownames(Y)), ]
+    X = X[ , colnames(X)%in%colnames(B)] 
+    B = B[ ,match(colnames(X), colnames(B))]
+    
+    bic = sapply(1:ncol(Y), function(i) {
+        y = as.numeric(Y[,i])
+        b = as.numeric(B[i,])
+        bx = X%*%b
+        t = sum(y)/sum(bx)
+        r = (y-t*bx)
+        ll = log(dnorm(r,sd=sd(r)))
+        ll[is.infinite(ll)] = min(ll[!is.infinite(ll)])
+        sll = sum(ll)
+        d = ncol(X) + 1
+        n = length(r) 
+        m = sum(b)
+        -2*sll + d*log(n)
+    } )
+    
+    mse = sapply(1:ncol(Y), function(i) {
+        y = as.numeric(Y[,i])
+        b = as.numeric(B[i,])
+        bx = X%*%b
+        t = sum(y)/sum(bx)
+        mean( (y-t*bx)^2 )
+    } )
+    
+    rmse = sqrt(mse)
+    
+    list( bic=bic, mse=mse, rmse=rmse, celltypes_on_spot=celltypes_on_spot )
+    
+}
+

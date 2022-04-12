@@ -16,7 +16,8 @@
 get_STcellchat <- function(STIE_result, ST_expr, 
                          database=c("human","mouse"), 
                          db_category=c("Secreted Signaling"), 
-                         max_reps=NULL )
+                         max_reps=NULL, 
+                         nboot=100, thresh=0.05)
 {
     # https://github.com/sqjin/CellChat
     # http://www.cellchat.org/
@@ -63,9 +64,11 @@ get_STcellchat <- function(STIE_result, ST_expr,
     ST_expr2 = t( ST_expr[ rownames(ST_expr)%in%spot_id, match(rownames(Signature),colnames(ST_expr)) ] )
     ST_expr3 = t( ST_expr[ rownames(ST_expr)%in%spot_id, ] )
     
+    cat("Estimating spatial cell type gene expression ... \n")
+    
     coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
         
-        cat(i,"\n")
+        #cat(i,"\n")
         Expr_on_spot_i = as.matrix( ST_expr2[,i] )
         PE_on_spot_i = PE_on_spot[i,]
         PM_on_spot_i = PM_on_spot[i,]
@@ -88,10 +91,13 @@ get_STcellchat <- function(STIE_result, ST_expr,
     uni_cellid_celltypes = cell_types[ match( uni_cellid, names(cell_types) ) ]
     num_celltypes = table(uni_cellid_celltypes)
     
+    # repeat the same number of cells, to simulate the gene expression mean
+    # for the cellchat bootstrapping permutation
     reps = num_celltypes[ match( colnames(Signature3), names(num_celltypes) ) ]
+    if(!is.null(max_reps)) reps = sapply(reps, function(x) min(x,max_reps) )
     
     data.input = do.call(cbind, lapply( 1:ncol(Signature3), function(i) {
-            ni = ifelse( is.null(max_reps), reps[i], min(reps[i],max_reps) )
+            ni = reps[i]
             xi = Signature3[,i]
             do.call(cbind, lapply(1:ni, function(j) xi ) )
         } ) )
@@ -113,11 +119,24 @@ get_STcellchat <- function(STIE_result, ST_expr,
     if(database=='human')  cellchat <- projectData(cellchat, PPI.human)
     if(database=='mouse')  cellchat <- projectData(cellchat, PPI.mouse)
     
-    cellchat <- computeCommunProb(cellchat)
+    # to calculate net$prob and net$pval based on nboot 
+    # for LRparirs, see dimnames(cellchat@net$prob)[[3]]
+    # of note, parameter "nboot"
+    # population.size does not use ni*nj/n^2
+    cellchat <- computeCommunProb(cellchat, population.size=FALSE, nboot=nboot)
     #cellchat <- filterCommunication(cellchat, min.cells = 10)
     
-    cellchat <- computeCommunProbPathway(cellchat)
-    cellchat <- aggregateNet(cellchat)
+    # to calculate pathway object@netP$pathways and object@netP$prob based on thres=0.05
+    # for pathways, see dimnames(cellchat@netP$prob)[[3]]
+    # of note, parameter "thresh"; if thresh=2 but not 1, it will cancel the pvalue filter
+    # becasue it is pval>=threh in cellchat
+    cellchat <- computeCommunProbPathway(cellchat, thresh=thresh)
+    
+    # to calculate net@weight=prob and net$count based on pval thres=0.05, by adding pathway prob
+    # of note, parameter "thresh"; if thresh=2, it will cancel the pvalue filter
+    cellchat <- aggregateNet(cellchat, thresh=thresh)
+    
+    # calculate netP$centr using pathway netP$prob
     cellchat <- netAnalysis_computeCentrality(cellchat, slot.name = "netP")
     
     par(mfrow = c(1,2), xpd=TRUE)
