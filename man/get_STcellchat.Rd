@@ -18,6 +18,8 @@ get_STcellchat(STIE_result, ST_expr, database = c("human", "mouse"),
 \item{db_category}{}
 
 \item{max_reps}{}
+
+\item{thresh}{}
 }
 \description{
 get_STcellchat

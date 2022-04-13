@@ -5,6 +5,8 @@
 #' @param database 
 #' @param db_category 
 #' @param max_reps 
+#' @param nboot
+#' @param thresh
 #'
 #' @return
 #' @export

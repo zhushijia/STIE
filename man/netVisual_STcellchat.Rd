@@ -4,7 +4,7 @@
 \alias{netVisual_STcellchat}
 \title{netVisual_STcellchat}
 \usage{
-netVisual_STcellchat(cellchat, cell_dist, cell_types)
+netVisual_STcellchat(cellchat, cell_dist, cell_types, color_use = NULL)
 }
 \arguments{
 \item{cellchat}{}
@@ -12,6 +12,8 @@ netVisual_STcellchat(cellchat, cell_dist, cell_types)
 \item{cell_dist}{}
 
 \item{cell_types}{}
+
+\item{color_use}{}
 }
 \description{
 netVisual_STcellchat

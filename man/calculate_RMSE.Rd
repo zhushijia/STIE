@@ -10,6 +10,8 @@ calculate_RMSE(STIE_result, ST_expr, Signature = NULL)
 \item{STIE_result}{}
 
 \item{ST_expr}{}
+
+\item{Signature}{}
 }
 \description{
 calculate_RMSE

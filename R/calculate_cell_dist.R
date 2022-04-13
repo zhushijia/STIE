@@ -30,7 +30,7 @@ calculate_cell_dist <- function(cells_on_spot,
     if(dist_type=="center") {
         
         X = do.call(rbind, lapply( 1:nrow(cells_on_spot), function(i) {   
-            cat(i,"\n")
+            # cat(i,"\n")
             d = sqrt( ( cells_on_spot[i, "X"] - cells_on_spot[, "X"])^2 + 
                           ( cells_on_spot[i, "Y"] - cells_on_spot[, "Y"])^2 ) 
             
@@ -49,7 +49,7 @@ calculate_cell_dist <- function(cells_on_spot,
     if(dist_type=="boundary") {
         
         X = do.call(rbind, lapply( 1:nrow(cells_on_spot), function(i) {   
-            cat(i,"\n")
+            # cat(i,"\n")
             d = sqrt( ( cells_on_spot[i, "X"] - cells_on_spot[, "X"])^2 + 
                           ( cells_on_spot[i, "Y"] - cells_on_spot[, "Y"])^2 ) 
             

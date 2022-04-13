@@ -11,6 +11,7 @@
 #' @param x_scale 
 #' @param plot_object 
 #' @param direction 
+#' @param prob_cutoff
 #' @param color_use 
 #' @param lwd 
 #' @param plot_cell 
@@ -20,10 +21,12 @@
 #' @export
 #'
 #' @examples
+#' 
+#' 
 plot_STcellchat <- function(cellchat, cell_dist, 
                             im, image_transparency=0, 
                             w=NULL, h=NULL, xoff=0, yoff=0, x_scale=1,
-                            plot_object, direction=c("outgoing","incoming"), 
+                            plot_object, direction=c("outgoing","incoming"), prob_cutoff=0,
                             color_use=NULL, lwd=10,
                             plot_cell=FALSE, contour=NULL) {
     
@@ -39,6 +42,8 @@ plot_STcellchat <- function(cellchat, cell_dist,
     # weight <- cellchat@net$weight
     pathway_names = cellchat@netP$pathways
     pathway_probs = cellchat@netP$prob
+    for(i in 1:dim(pathway_probs)[3]) pathway_probs[,,i] = pathway_probs[,,i]*(pathway_probs[,,i]>=prob_cutoff)
+    
     
     patternSignaling <- methods::slot(cellchat, "netP")$pattern [[ direction ]]
     data = patternSignaling$data
@@ -105,6 +110,10 @@ plot_STcellchat <- function(cellchat, cell_dist,
         pixel_y = ( cells_on_spot$Y - yoff )*x_scale
         cell_coordinates = data.frame(pixel_x, pixel_y)
         
+        plot_range = with(cell_coordinates, which( pixel_x>0 & pixel_y>0 &
+                                  pixel_x<w*x_scale & pixel_y<h*x_scale ) )
+        cell_dist = cell_dist[cell_dist$i%in%plot_range & cell_dist$j%in%plot_range, ]
+        
         #################################################################################
         ######### plot interaction
         #################################################################################
@@ -123,14 +132,25 @@ plot_STcellchat <- function(cellchat, cell_dist,
         cat("Plotting interactions ... \n")
         for(k in 1:nrow(cell_dist))
         {
-            #cat(k,"\n")
             i = cell_dist$i[k]
             j = cell_dist$j[k]
             ci = cell_types[i]
             cj = cell_types[j]
-            if(direction=="outgoing") lines( cell_coordinates[c(i,j),], col=color_use[ci], lwd=lwd*cci[ci,cj] )
-            if(direction=="incoming") lines( cell_coordinates[c(i,j),], col=color_use[cj], lwd=lwd*cci[cj,ci]  )
+            if( direction=="outgoing" ) {
+                coli = color_use[ci]
+                colj = color_use[cj]
+            }
+            if( direction=="incoming" ) {
+                coli = color_use[cj]
+                colj = color_use[ci]
+            }
+            lines( cell_coordinates[c(i,j),], col=coli, lty=2, lwd=lwd*cci[ci,cj] )
+            lines( cell_coordinates[c(i,j),], col=colj, lty=3, lwd=lwd*cci[cj,ci]  )
+            # cat(k,cci[ci,cj],"\n")
+            
         }
+        
+        print(cci)
         
         if(plot_cell) {
             contour = contour[ match(names(cell_types), names(contour)) ]
@@ -140,8 +160,10 @@ plot_STcellchat <- function(cellchat, cell_dist,
         par(mar = c(0, 0, 0, 0))
         plot.new()
         legend = uni_celltypes
+        title = paste0( plot_object, ": ", direction )
         legend('topleft', legend=legend, lty=1, lwd=3, col=color_use, 
-               box.lwd = 0, box.col = "white",bg = "white" )
+               box.lwd = 0, box.col = "white",bg = "white", 
+               title=title, title.adj=0.1 )
         
         
         par( mfrow=mfrow )
@@ -151,7 +173,6 @@ plot_STcellchat <- function(cellchat, cell_dist,
     
     
 }
-
 
 
 plot_cell_contour = function(contour, cell_coordinates, w, h, xoff, yoff, x_scale, cell_cols )

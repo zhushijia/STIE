@@ -2,6 +2,7 @@
 #'
 #' @param STIE_result 
 #' @param ST_expr 
+#' @param Signature
 #'
 #' @return
 #' @export

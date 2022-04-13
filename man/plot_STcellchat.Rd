@@ -6,8 +6,8 @@
 \usage{
 plot_STcellchat(cellchat, cell_dist, im, image_transparency = 0,
   w = NULL, h = NULL, xoff = 0, yoff = 0, x_scale = 1,
-  plot_object, direction = c("outgoing", "incoming"), color_use = NULL,
-  lwd = 10, plot_cell = FALSE, contour = NULL)
+  plot_object, direction = c("outgoing", "incoming"), prob_cutoff = 0,
+  color_use = NULL, lwd = 10, plot_cell = FALSE, contour = NULL)
 }
 \arguments{
 \item{cellchat}{}
@@ -42,4 +42,8 @@ plot_STcellchat(cellchat, cell_dist, im, image_transparency = 0,
 }
 \description{
 plot_STcellchat
+}
+\examples{
+
+
 }
