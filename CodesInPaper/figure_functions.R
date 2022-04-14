@@ -488,3 +488,12 @@ font.size = 10
 font.size.title = 12
 
 
+
+split_data2 = split(data2, data2$Pattern)
+split_data2 = lapply(split_data2, function(x) x[order(x$Contribution,decreasing=T),] )
+
+
+
+
+
+

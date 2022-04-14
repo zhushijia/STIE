@@ -52,10 +52,14 @@ plot_STcellchat <- function(cellchat, cell_dist,
     
     ######### pattern_probs
     pattern_names = sort(unique(as.character(data1$Pattern)))
+    
     pattern_probs = lapply( pattern_names, function(pattern) {
+        r1 = subset(data1, Pattern==pattern)$Contribution
+        if( direction=="outgoing" ) r1 = matrix( r1, nrow=length(r1), ncol=length(r1), byrow=F )
+        if( direction=="incoming" ) r1 = matrix( r1, nrow=length(r1), ncol=length(r1), byrow=T )
         tmp = lapply( pathway_names, function(pathway) {
             r2 = subset(data2, Pattern==pattern & Signaling==pathway)$Contribution    
-            pathway_probs[,,pathway] * r2
+            r1 * r2 * pathway_probs[,,pathway]
         })
         dat = tmp[[1]]
         for(i in 2:length(tmp)) dat=dat+tmp[[i]]

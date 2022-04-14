@@ -38,17 +38,12 @@ cell_dist$d_nm = cell_dist$d/ref_1nm
 
 cellchat <- get_STcellchat(STIE_result, ST_expr, database="human", db_category=NULL, max_reps=NULL )
 
-nPatterns_out = 3
-nPatterns_in = 7
-lwd = 10
-topN = 30
-outputDir = paste0( "/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/CellChat/deconvolution_nPatternOut",
-                    nPatterns_out,"_nPatternIn_",nPatterns_in,"_lwd_",lwd)
-dir.create(outputDir)
-setwd(outputDir)
-#save(cellchat, file="STcellchat_from_deconvolution.RData")
-
 ######################################################################################################
+
+parentDir="/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/CellChat"
+dir.create(parentDir)
+setwd(parentDir)
+
 if(0)
 {
     pdf("STcellchat_from_deconvolution_selectK.pdf", w=8, h=4)
@@ -57,6 +52,18 @@ if(0)
     dev.off()
 }
 
+######################################################################################################
+
+nPatterns_out = 3
+nPatterns_in = 3
+lwd = 10
+topN = 30
+prob_cutoff = 0
+outputDir = paste0( parentDir, "/deconvolution_nPatternOut", nPatterns_out,"_nPatternIn_",nPatterns_in,
+                    "_lwd_",lwd, "_prob_cutoff_", prob_cutoff)
+dir.create(outputDir)
+setwd(outputDir)
+#save(cellchat, file="STcellchat_from_deconvolution.RData")
 
 ######################################################################################################
 pdf("identifyCommunicationPatterns.pdf", w=10, h=20)
@@ -78,7 +85,7 @@ data = patternSignaling$data
 pathway.show = colnames(data)[1:topN]
 ######################################################################################################
 pdf("netVisual_STcellchat.pdf", w=6, h=10)
-netVisual_STcellchat(cellchat, cell_dist, STIE_result$cell_types, color.use=colors)
+netVisual_STcellchat(cellchat, cell_dist, STIE_result$cell_types, color_use=colors)
 dev.off()
 ######################################################################################################
 pdf("netAnalysis_signalingRole_heatmap.pdf", w=10, h=5)
@@ -105,7 +112,7 @@ for(i in 1:nPatterns_out)
     png( paste0("plot_STcellchat_outgoing_pattern_", i ,".png"), width=2000,height=2000,res=300)
     plot_STcellchat(cellchat, cell_dist, 
                     im, image_transparency=1, x_scale=args$x_scale,
-                    plot_object=paste0("Pattern ",i), direction="outgoing", 
+                    plot_object=paste0("Pattern ",i), direction="outgoing", prob_cutoff=prob_cutoff,  
                     color_use=colors, lwd=lwd,
                     plot_cell=FALSE, contour=cell_info$cell_contour)
     dev.off()
@@ -117,7 +124,7 @@ for(i in 1:nPatterns_in)
     png( paste0("plot_STcellchat_incoming_pattern_", i ,".png"), width=2000,height=2000,res=300)
     plot_STcellchat(cellchat, cell_dist, 
                     im, image_transparency=1, x_scale=args$x_scale,
-                    plot_object=paste0("Pattern ",i), direction="incoming", 
+                    plot_object=paste0("Pattern ",i), direction="incoming", prob_cutoff=prob_cutoff,  
                     color_use=colors, lwd=lwd,
                     plot_cell=FALSE, contour=cell_info$cell_contour)
     dev.off()
@@ -130,7 +137,7 @@ for(i in 1:length(pathway.show))
     png( paste0("plot_STcellchat_pathway_", i, "_", pathway.show[i] ,"_outgoing.png"),width=2000,height=2000,res=300)
     plot_STcellchat(cellchat, cell_dist, 
                     im, image_transparency=1, x_scale=args$x_scale,
-                    plot_object=pathway.show[i], direction="outgoing", 
+                    plot_object=pathway.show[i], direction="outgoing", prob_cutoff=prob_cutoff,  
                     color_use=colors, lwd=lwd,
                     plot_cell=FALSE, contour=cell_info$cell_contour)
     dev.off()
@@ -138,11 +145,38 @@ for(i in 1:length(pathway.show))
     png( paste0("plot_STcellchat_pathway_", i, "_", pathway.show[i] ,"_incoming.png"),width=2000,height=2000,res=300)
     plot_STcellchat(cellchat, cell_dist, 
                     im, image_transparency=1, x_scale=args$x_scale,
-                    plot_object=pathway.show[i], direction="incoming", 
+                    plot_object=pathway.show[i], direction="incoming", prob_cutoff=prob_cutoff,  
                     color_use=colors, lwd=lwd,
                     plot_cell=FALSE, contour=cell_info$cell_contour)
     dev.off()
 }
+
+
+######################################################################################################
+pdf("COLLAGEN_example.pdf")
+plot_STcellchat(cellchat, cell_dist, 
+                im, image_transparency=0.8, 
+                w=3000, h=3000, xoff=8000, yoff=10000, x_scale=0.2,
+                plot_object="COLLAGEN", direction="outgoing", prob_cutoff=prob_cutoff,  
+                color_use=colors, lwd=lwd,
+                plot_cell=FALSE, contour=cell_info$cell_contour)
+
+plot_STcellchat(cellchat, cell_dist, 
+                im, image_transparency=0.8, 
+                w=3000, h=3000, xoff=8000, yoff=10000, x_scale=0.2,
+                plot_object="COLLAGEN", direction="incoming", prob_cutoff=prob_cutoff,  
+                color_use=colors, lwd=lwd,
+                plot_cell=FALSE, contour=cell_info$cell_contour)
+dev.off()
+
+
+
+
+
+
+
+
+
 
 
 
