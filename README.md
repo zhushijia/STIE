@@ -3,6 +3,7 @@ Spatial Transcriptome Image and Expression integrative deconvolution enables sin
 
 ## Description
 STIE is a novel computational method tailored for spatial transcriptome data analysis, which integrated both pathology image and gene expression to perform cell type deconvolution, enabling single cell-level spatial gene expression anlayiss.
+![Figure1_STIE_flowchart2](https://user-images.githubusercontent.com/5418417/168800169-94375fdf-9e42-40b5-976e-b707365cf4ca.jpg)
 
 
 ## Dependencies on packages
@@ -52,6 +53,7 @@ devtools::install_github("zhushijia/STIE""
                          ,auth_token = "My script"
                          )
 ```
+
 
 ## Tutorial
    See our [wiki](https://github.com/zhushijia/STIE/wiki)
