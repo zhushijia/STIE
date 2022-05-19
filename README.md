@@ -1,5 +1,5 @@
 # STIE
-Spatial Transcriptome Image and Expression integrative deconvolution enables single cell level spatial analysis
+Spatial Transcriptome Image and Expression integration enables single-cell level spatial transcriptomics data analysis
 
 ## Description
 STIE is a novel computational method tailored for spatial transcriptome data analysis, which integrated both pathology image and gene expression to perform cell type deconvolution, enabling single cell-level spatial gene expression anlayiss.
@@ -12,7 +12,7 @@ STIE is a novel computational method tailored for spatial transcriptome data ana
 -  R package: [magick](https://cran.r-project.org/web/packages/magick/vignettes/intro.html); [EBImage](https://bioconductor.org/packages/release/bioc/html/EBImage.html); [Seurat](https://satijalab.org/seurat/articles/install.html); [foreach](https://cran.r-project.org/web/packages/foreach/); [CellChat](https://github.com/sqjin/CellChat); [quadprog](https://cran.r-project.org/web/packages/quadprog/index.html); 
 
 ## Installation
-### 1) Obtaining R (>=3.6)
+### 1) Obtain R (>=3.6)
 Clear instructions for different version can be found here:
 http://cran.fhcrc.org/
 
