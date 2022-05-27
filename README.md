@@ -48,10 +48,6 @@ Alternatively, use [devtools](https://github.com/hadley/devtools) package
 > install.packages("devtools")
 > library(devtools)
 > install_github("zhushijia/STIE")
-devtools::install_github("zhushijia/STIE""
-                         ,ref="main"
-                         ,auth_token = "My script"
-                         )
 ```
 
 
