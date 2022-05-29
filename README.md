@@ -2,7 +2,7 @@
 Spatial Transcriptome Image and Expression integration enables single-cell level spatial transcriptomics data analysis
 
 ## Description
-STIE is a novel computational method tailored for spatial transcriptome data analysis, which integrated both pathology image and gene expression to perform cell type deconvolution, enabling single cell-level spatial gene expression anlayiss.
+STIE is a novel computational method tailored for spatial transcriptomics data analysis, which integrated spot level gene expression, nuclear segmentation, and nuclear morphology to perform cell type deconvolution/convolution and clustering, therefore enabling the single-cell level spatial transcriptomics anlayiss.
 ![Figure1_STIE_flowchart2](https://user-images.githubusercontent.com/5418417/168800169-94375fdf-9e42-40b5-976e-b707365cf4ca.jpg)
 
 
@@ -18,8 +18,8 @@ http://cran.fhcrc.org/
 
 ### 2) Install the dependent R packages
 ```
-# install R packages of computating
-> install.packages(c("foreach","doParallel","quadprog"))
+# install R packages of computing
+> install.packages(c("quadprog"))
 
 # install magick
 > install.packages("magick")
@@ -35,7 +35,6 @@ http://cran.fhcrc.org/
 
 # install Seurat
 > install.packages('Seurat')
-
 ```
 
 ### 3) Install the STIE R package
