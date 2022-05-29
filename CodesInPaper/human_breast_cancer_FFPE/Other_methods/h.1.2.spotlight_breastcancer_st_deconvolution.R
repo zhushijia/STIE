@@ -17,8 +17,8 @@ library(hdf5r)
 ####################################################################################
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/SPOTlight")
-load("breastcancer_sc_cluster_markers_all.RData")
-
+load("breastcancer_sc_cluster_markers_all_full_signature.RData")
+      
 ####################################################################################
 ############## spatial transcriptome
 ####################################################################################
@@ -41,7 +41,7 @@ spotlight_ls <- spotlight_deconvolution(
     min_cont = 0 # Remove those cells contributing to a spot below a certain threshold 
 )
 
-saveRDS(object = spotlight_ls, file = "spotlight_ls.rds")
+saveRDS(object = spotlight_ls, file = "spotlight_ls_full_signature.rds")
 
 #Read RDS object
 #spotlight_ls <- readRDS(file = "spotlight_ls.rds" )

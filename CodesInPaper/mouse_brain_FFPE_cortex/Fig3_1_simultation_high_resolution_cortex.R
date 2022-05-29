@@ -88,7 +88,7 @@ legend( 'topright', pch=16, col=cols, legend=rev(names(STdata_sim)) )
 ######## plot spot example
 ########################################################################################
 
-
+# png("tmp.png", width=2000, height=2000, res=300)
 par(mfrow=c(1,2))
 spot_coordinates_ref = STdata_sim[['55']]$spot_coordinates
 ind = which.max( spot_coordinates_ref$cell_count )
@@ -101,7 +101,7 @@ w = 4*spot_radius / args$x_scale
 h = 4*spot_radius / args$x_scale
 img <- im %>% image_crop(geometry = geometry_area(width = w, height = h, x_off = xoff, y_off = yoff))
 img <- img %>% as_EBImage()
-image_transparency=0.5; img <- (1-image_transparency)*img + image_transparency*(img*0+1)
+image_transparency=0.7; img <- (1-image_transparency)*img + image_transparency*(img*0+1)
 display(img,method='raster')
 
 contour1 = cell_info$cell_contour

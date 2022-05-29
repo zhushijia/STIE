@@ -1,13 +1,24 @@
 #' merge_feature
 #'
-#' @param feature_dir 
-#' @param tag 
+#' merge_feature merges the morphological features from all split images
 #'
-#' @return
+#' @param feature_dir a character value representing the directory where imageJ extracts the cell segmentation and cellular morphological features
+#'
+#' @return A list containing the follow components:
+#' \itemize{
+#'  \item {cell_feature} a data frame representing the cellular morphological features, with row being the single cell and the column being the morphological feature
+#'  \item {cell_contour} a list of cell contour, where each item is a data frame representing the contour coordinates
+#' }
+#' 
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
 #' @export
 #'
-#' @examples
-merge_feature <- function( feature_dir, tag=NULL )
+#' @references
+#'
+#' @seealso \code{\link{split_image}}; \code{\link{run_imageJ_plugin}};
+#' 
+#' 
+merge_feature <- function( feature_dir )
 {
   
   feature_files <- paste0( feature_dir, "/", list.files(feature_dir,pattern=".feature$") )
@@ -70,16 +81,4 @@ merge_feature <- function( feature_dir, tag=NULL )
   
   info
 }
-
-
-
-# https://imagej.net/plugins/morphological-segmentation
-
-# labelsToROIs
-#https://www.youtube.com/watch?v=G_vGQCzZ3xg
-
-#
-#https://www.unige.ch/medecine/bioimaging/files/3714/1208/5964/CellCounting.pdf
-
-#https://forum.image.sc/t/creating-labeled-image-from-rois-in-the-roi-manager/4256/3
 

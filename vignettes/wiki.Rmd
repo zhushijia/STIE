@@ -1,0 +1,470 @@
+# STIE: Single-cell level deconvolution, convolution and clustering in spatial transcriptomics by aligning spatial transcriptome to the nuclear morphology
+
+## Contents
+1. [STIE dependent packages](https://github.com/zhushijia/STIE/wiki#1-load-stie-dependent-tools-and-r-packages)
+1. [STIE input](https://github.com/zhushijia/STIE/wiki#2-stie-input)
+1. [Nucleus segmentation based on H&E image](https://github.com/zhushijia/STIE/wiki#3-nucleus-segmentation-based-on-he-image)
+* 1. [Installation of “Multi-Organ Nucleus Segmentation model”](https://github.com/zhushijia/STIE/wiki#31-installation-of-multi-organ-nucleus-segmentation-model)
+* 1. [Nucleus segmentation in STIE](https://github.com/zhushijia/STIE/wiki#32-nucleus-segmentation-in-stie)
+4. [Single-cell level deconvolution in Spatial transcriptomics](https://github.com/zhushijia/STIE/wiki#4-single-cell-level-deconvolution-in-spatial-transcriptomics)
+1. [Single-cell level clustering in Spatial transcriptomics](https://github.com/zhushijia/STIE/wiki#5-single-cell-level-clustering-in-spatial-transcriptomics)
+1. [Spatially resolved cell-cell interaction](https://github.com/zhushijia/STIE/wiki#6-spatially-resolved-cell-cell-interaction)
+
+## Description
+The 10X Visium spot-based spatial transcriptome profiling, due to its higher throughput, less custom protocol, and steadily increasing spot resolution, has been the most predominant commercially available technique. However, by using both real and simulated spatial transcriptomic data, we found that regardless of resolution (up to 5 μm in spot diameter), a large proportion of spots still partially cover multiple cells simultaneously, suggesting the intrinsic non-single-cell level of the spot-based spatial transcriptomics. To this end, we present STIE, an EM algorithm that aligns the spatial transcriptome data to the matched histology image-based nucleus segmentation, mutually draws information from spatial transcriptome and nuclear morphology to optimize their models jointly, and recovers missing cells from up to ~70% gap area between spots via neighborhood information and morphological similarity, thereby enabling the real single-cell level and whole-slide scale deconvolution, convolution and clustering for both low- and high-resolution spots. As opposed to the spot/subspot level clustering, whose signature is a mixture of cell types and can even miss cell types, the signature by STIE clustering largely matches the single cell type derived from single-cell RNAseq data. Further, the resolved single cells with spatial information retained, enabled us to address the critical relevant questions, including bona fide spot-capturing area, additional contribution of cellular morphology to cell typing, spatial cell type colocalization, and spatial cell-cell interaction. 
+
+
+## 1. Load STIE dependent tools and R packages
+
+```{r}
+library(STIE)
+
+#### for manipulating images
+library(magick)
+library(EBImage)
+
+#### for manipulating ST gene expression 
+library(Seurat)
+
+#### for the quadratic programming 
+library("quadprog")
+
+#### for spatially resolved cell-cell interaction
+library(CellChat)
+library(NMF)
+library(ggalluvial)
+```
+
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+
+## 2. STIE input
+
+STIE has two hyperparameters, 𝝺 and 𝝲, representing the shrinkage penalty for nuclear morphology, and the area surrounding the center of the spot, respectively. 
+1. `𝝺` this parameter penalizes the difference between gene expression- and nuclear morphology-predicted cell type proportion, and accordingly, STIE chooses  to tweak the weights of contribution between gene expression and cellular morphology to the final model fitting. 
+1. `𝝲` by modulating this parameter, STIE aims to find the group of cells, which are covered by the spot and can best fit the gene expression of the spot.
+
+STIE takes the follows as input:  
+* `nuclear coordinates` the spatial coordinates of nuclei
+* `nuclear morphology` the nuclear morphological features of nuclei
+* `spot-level gene expression` the gene expression on spots
+* `cell-type transcriptomic signature` the cell-type signature derived from scRNA-seq data
+
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+
+***
+
+**Before running cell segmentation and spatial transcriptome data preprocessing, if users only want to test the code but have not installed imageJ or spaceranger yet, we have provided the testing data, and users can directly jump to [Section of deconvolution](https://github.com/zhushijia/STIE/wiki#4-single-cell-level-deconvolution-in-spatial-transcriptomics).**
+
+
+## 3. Nucleus segmentation based on H&E image
+STIE takes as input (but not limited to) the nucleus segmentation implemented in the DeepImageJ, called “Multi-Organ Nucleus Segmentation model”. It is proposed by “Multi-Organ Nucleus Segmentation Challenge”, to train the generalized nucleus segmentation model in H&E stained tissue images. Following up, the nucleus location along with the nucleus morphological features were extracted for every single nucleus. 
+
+### 3.1 Installation of “Multi-Organ Nucleus Segmentation model”
+Please follow the following steps to install
+1. download and install [imageJ](https://imagej.nih.gov/ij/download.html)
+1. install imageJ plugin [deepImageJ](https://deepimagej.github.io/deepimagej/download.html)
+1. install imageJ plugin [starDist](https://imagej.net/plugins/stardist), if not yet
+1. install ["Multi-Organ Nucleus Segmentation model"](https://bioimage.io/#/?type=all&tags=multi-organ) in deepImageJ
+
+### 3.2 Nucleus segmentation in STIE
+
+To reduce memory consumption, we run `split_image()` function to split the large H&E images into small images of 3000x3000 pixels. To avoid that cells are split on the image boundary, each split image has four 100-pixel margins overlapping with its adjacent ones. The overlapped cells are checked from the four 100-pixel margins based on their location distance and cell diameter. The larger cell among overlapped cells was kept for the following analysis. 
+Following-up, the deepImageJ “Multi-Organ Nucleus Segmentation model” is run for each split image. The cell location and morphology features were extracted for every single cell using ImageJ ROI Manager. The imageJ macro was incorporated into `run_imageJ_plugin()` function to perform the nucleus segmentation. 
+The installation location of `ImageJ/Fiji.app/ImageJ-linux64` in above steps will be used in the `run_imageJ_plugin()` function to run the imageJ macro. Moreover, user should specify a folder `feature_dir` to save the intermediate results. 
+
+```{r}
+library(magick)
+library(EBImage)
+
+## split image & run imageJ plugin
+split_image(image=image_path, split_dir=feature_dir, 
+            w=3000, h=3000, margin=100, x_scale=1 )
+
+## if spot_coordinates specified, then only split image covered by the spots
+# split_image(image=image_path, split_dir=feature_dir, 
+#             spot_coordinates = spot_coordinates,
+#             w=3000, h=3000, margin=100, x_scale=1 )
+
+run_imageJ_plugin(
+        imageJ = "/archive/SCCC/Hoshida_lab/s184554/Code/github/ImageJ/Fiji.app/ImageJ-linux64",
+        plugin_macro = NULL,
+        split_image_dir = feature_dir, 
+        pattern="jpg$" )
+```
+
+After running the above codes, the segmentation results will be generated for each split image, including morphological values and masking image.
+
+![split_image](https://user-images.githubusercontent.com/5418417/169028287-8543a548-a332-4850-be6f-f7deceb2bceb.jpg)
+
+Next, we aggregate the results from the split images, and remove the redundancy from the overlapping margins. 
+
+```{r}
+cell_info <- merge_feature( feature_dir )
+morphology_fts <- cell_info$cell_feature
+cell_contour <- cell_info$cell_contour
+morphology_fts$pixel_x <- morphology_fts$X
+morphology_fts$pixel_y <- morphology_fts$Y
+
+## merge_feature may take some time, so, it is recommended to save it,
+## and load it once the users rerun the STIE later on
+save(cell_info, file=paste0(feature_dir,"/cell_info.RData"))
+```
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+
+## 4. Single-cell level deconvolution in spatial transcriptomics
+We take the mouse brain hippocampus as an example. The 10X spatial transcriptome FFPE data is downloaded from the [10x Genomics public dataset](https://www.10xgenomics.com/resources/datasets/adult-mouse-brain-ffpe-1-standard-1-3-0). 
+The raw data 10X Visium FFPE is preprocessed using [spaceranger (>=1.3.0)](https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/count). The preprocessed data will be generated in the count/sample/outs directory. We used the following code to load the spot gene expression and spot coordinates. 
+
+```{r}
+STIE.dir = system.file(package = "STIE")
+nn = load( paste0(STIE.dir,"/data/MouseBrainHippocampus_10xVisiumFFPE.RData") )
+nn
+#>  nn
+#>  [1] "ST_expr"          "spot_coordinates" "cell_contour"     "morphology_fts"   "Signature"        "Kmeans"
+```
+
+Alternatively, users can load the data from the spaceranger output using the following code:
+
+```{r}
+library(Seurat)
+
+### the location of spot coordinates and spot gene expression
+spotfile <- "outs/spatial/tissue_positions_list.csv"
+matrix_path <- "outs/filtered_feature_bc_matrix.h5"
+
+spot_coordinates <- read.csv(file = spotfile, header = FALSE,
+                             col.names=c("barcode","tissue","row","col","imagerow","imagecol"))
+#### switch X and Y coordinates to match the direction of the image
+spot_coordinates <- data.frame(spot_coordinates, pixel_x=spot_coordinates$imagecol, pixel_y=spot_coordinates$imagerow)
+
+ST_expr <- as.data.frame(t(as.matrix(Read10X_h5(matrix_path))))
+
+spot_coordinates <- subset(spot_coordinates, barcode%in%rownames(ST_expr) )
+ST_expr <- ST_expr[match( as.character(spot_coordinates$barcode), rownames(ST_expr) ),]
+
+head(spot_coordinates, 3)
+#>            barcode tissue row col imagerow imagecol pixel_x pixel_y
+#> ACTGTCCAGGATTATA-1      1  33  55    13141    13076   13141   13076
+#> TTGCTGATCATGTTCG-1      1  33  57    13430    13075   13430   13075
+#> CACTAAAGTTGCCTAT-1      1  35  51    12560    12574   12560   12574
+
+dim(ST_expr)
+#>[1]   151 19465
+```
+
+Based on the cell spatial location and the spot coordinates, we can find the cells covered by each spot. Each row in the data frame `cells_on_spot` is a single cell, where you can find its nuclear spatial location, the values of nuclear morphological features, and the spot id covering that cell. 
+
+```{r}
+#### calculate spot radius based on fct = spot_radius / spot_center_distance
+fct <- (55/2)/100 
+spot_radius <- calculate_spot_radius(spot_coordinates, fct)
+
+#### get cells within each spot based on cellular coordinates and spot coordinates
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.3*spot_radius)
+head(cells_on_spot, 3)
+
+#>    cell_id X.1 Area    Mean StdDev Mode Min Max        X        Y      XM       YM  Perim.  BX   BY
+#>       11  14  927 126.937 28.306  116  25 194 12959.00 13145.35 957.906 1144.535 108.398 941 1126
+#>      125 133 1124 153.386 42.652  126  11 255 12947.88 13217.61 946.545 1216.193 120.115 928 1197
+#>      190 201 1112 137.353 35.501  111  46 246 12913.31 13107.49 912.127 1106.683 121.201 894 1085
+#>  Width Height  Major  Minor   Angle Circ.  Feret IntDen Median   Skew   Kurt X.Area RawIntDen Ch
+#>     34     37 35.154 33.575  78.837 0.991 35.430 117671    128 -0.715  1.234    100    117671  1
+#>     38     40 40.422 35.405 128.347 0.979 41.253 172406    148  0.253  0.540    100    172406  1
+#>     37     41 42.685 33.169 120.040 0.951 43.462 152737    137  0.135 -0.528    100    152737  1
+#>  FeretX  FeretY FeretAngle MinFeret    AR Round Solidity Eccentricity  pixel_x  pixel_y
+#>  958.50 1126.68      90.00   33.012 1.047 0.955    1.004    0.2963373 283.3187 287.3928
+#>  931.86 1201.86     135.00   35.530 1.142 0.876    0.997    0.4825210 283.0757 288.9726
+#>  900.40 1088.90     128.93   33.317 1.287 0.777    0.991    0.6294209 282.3199 286.5651
+#>                spot     dist
+#>  ACTGTCCAGGATTATA-1 2.559744
+#>  ACTGTCCAGGATTATA-1 3.263561
+#>  ACTGTCCAGGATTATA-1 3.631476
+```
+
+Load mouse brain hippocampus scRNA-seq derived cell type transcriptomic signatures. We run STIE deconvolution by setting `known_signature=TRUE` and `known_cell_types=FALSE`. We set `lambda=0` and `steps=30` for EM algorithm iteration. 
+
+```{r}
+#### here, we use two morphological features
+features = c("Area", "Round")
+
+#### run STIE
+library("quadprog")
+result_deconv <- STIE(ST_expr, Signature, 
+               cells_on_spot, features, 
+               lambda=0, steps=30, 
+               known_signature=TRUE, known_cell_types=FALSE)
+names(result_deconv)
+#> [1] "lambda"         "mu"             "sigma"          "PE_on_spot"     "PM_on_cell"    
+#> [6] "PME_uni_cell"   "cell_types"     "uni_cell_types" "Signature"      "cells_on_spot" 
+```
+
+Users can use the `plot_sub_image()` function to overlay the single cells along with their cell types onto the image (downloaded from [10x Genomic public dataset](https://www.10xgenomics.com/resources/datasets/adult-mouse-brain-ffpe-1-standard-1-3-0)). Some of the useful visualization parameters are listed as following: 
+
+* `x_scale` a numeric value from 0 to 1, representing the scaling factor for resizing image
+* `w` a numeric value representing the width for image cropping
+* `h` a numeric value representing the height for image cropping
+* `xoff` a numeric value representing the x-axis offset for image cropping
+* `yoff` a numeric value representing the y-axis offset for image cropping
+* `plot_cell` a boolean value representing whether to plot the cell contour
+* `color_use` a vector of character values representing the colors to plot the cell contour
+* `plot_spot` a boolean value representing whether to plot the spot
+* `spot_cols` a vector of character values representing the colors of spots
+* `fill_spot`  a boolean value representing whether to fill in the spot
+* `axis_tick` a numeric values representing the interval between two ticks
+* `axis_col` a character value representing the color of axis
+
+
+```{r}
+library(EBImage)
+library(magick)
+
+#### read image
+im <- image_read(image_path)
+
+#### the STIE-obtained cell types
+cell_types = result_deconv$cell_types
+
+#### subset the cell contour 
+contour = cell_contour[ match(names(cell_types), names(cell_contour)) ]
+
+#### plot the single cells along with their cell types onto the image
+colors = c("magenta", "blue", "green", "black", "orange")
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               plot_spot=T, plot_cell=F)
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               contour=contour, cell_types=cell_types, color_use=colors, 
+               plot_spot=F, plot_cell=T)
+```
+
+![1 1](https://user-images.githubusercontent.com/5418417/168798841-745e00cb-63e7-45cc-8850-c73abe7660c5.jpg)
+
+
+The cells comprise two parts: cells inside and outside the spot. The cells outside the spot are recovered based on the neighborhood information by enlarging the bona file spot size.
+ 
+```{r}
+#### plot cells inside spots
+cells_inside <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, spot_radius)
+cell_types_inside <- cell_types[ match(cells_inside$cell_id, names(cell_types)) ]
+contour_inside = cell_contour[ match(names(cell_types_inside), names(cell_contour)) ]
+
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               contour=contour_inside, cell_types=cell_types_inside, 
+               color_use=colors, plot_spot=T, plot_cell=T )
+
+#### plot cells outside spots
+cells_outside <- cells_on_spot[ !cells_on_spot$cell_id%in%cells_inside$cell_id,  ]
+cell_types_outside <- cell_types[ match(cells_outside$cell_id, names(cell_types)) ]
+contour_outside = cell_contour[ match(names(cell_types_outside), names(cell_contour)) ]
+
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               contour=contour_outside, cell_types=cell_types_outside, 
+               color_use=colors, plot_spot=T, plot_cell=T )
+```
+![1 2](https://user-images.githubusercontent.com/5418417/168798870-1aca30f7-a398-4958-8095-cdd2c7628fa3.jpg)
+
+We can investigate the nuclear morphological feature distribution for each cell type.
+
+```{r}
+library(vioplot)
+fs = c("Area", "Solidity", "Circ.", "Skew", "Kurt", "Round", "Eccentricity", "IntDen", "Feret")
+par( mfrow=c(3,3) )
+par(mar = c(2, 2, 2, 2))
+lapply( fs, function(f) {
+    x = split( cells_on_spot[,f], result_deconv$cell_types )
+    vioplot(cells_on_spot[,f]~result_deconv$cell_types, col=colors, main=f, xlab=f, rectCol="darkgrey", las=3)
+})
+```
+![wiki_figure2](https://user-images.githubusercontent.com/5418417/170846157-38d8b2a0-f5a1-488d-9b86-403914771522.jpg)
+
+
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+
+## 5. Single-cell level clustering in spatial transcriptomics
+Given no cell type transcriptomic signature, STIE can perform cell type clustering at the single-cell level, and meanwhile, estimate the gene expression signature for clusters. 
+The initial values of clusters are first given using the spot level clustering, e.g., K-means and Louvain clustering, the cells within the spot are assigned the same initial cluster, and the initial value of cluster signature was set to be the average gene expression of spots belonging to the cluster. In each iteration, the cluster signature was re-estimated in the M-step, and the cluster of each single cell was re-assigned in the E-step. 
+In the following example, we take the spot level Kmeans cluster at k=5 as initial value, and run STIE with by setting `known_signature` and `known_cell_types` as `FALSE`.
+
+```{r}
+#### choose Kmeans (k=5) on spot level gene expression
+cluster = Kmeans[[5]]
+cluster = cluster[ match( as.character(spot_coordinates$barcode), as.character(cluster$Barcode)), ]
+head(cluster)
+#>                Barcode Cluster
+#> 11  ACTGTCCAGGATTATA-1       2
+#> 147 TTGCTGATCATGTTCG-1       1
+#> 37  CACTAAAGTTGCCTAT-1       2
+#> 105 GTGCTCAAGTACTGTC-1       2
+#> 46  CCATGCCTGTTTAGTA-1       2
+#> 133 TCTAGTTATCAGAAGA-1       2
+```
+```{r}              
+#### plot the Kmeans clustering on the spot
+colors2 = c("orange", "green", "black", "magenta", "blue")
+spot_cols = colors2[ cluster$Cluster ]
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.1, spot_coordinates=spot_coordinates, 
+               plot_spot=T, plot_cell=F, spot_cols=spot_cols, fill_spot=T  )
+```
+![wiki_figure3_1](https://user-images.githubusercontent.com/5418417/170846597-2fbef053-f0e7-4bdd-a215-db708357752b.jpg)
+
+
+```{r}
+#### take the cluster average gene expression as the initial value of the cluster signature
+ST_expr_ini = ST_expr[ match(as.character(cluster[,1]),rownames(ST_expr)), ]
+Signature_ini = t(apply(ST_expr_ini, 2, function(x) tapply(x,cluster[,2],mean) ))
+
+#### run STIE using "Signature_ini" as initial value and iteratively refine "Signature" 
+#### by setting both "known_signature=FALSE" and "known_cell_types=FALSE"
+result_cluster = STIE(ST_expr, Signature_ini, cells_on_spot, features, lambda=0, steps=30, 
+              known_signature=FALSE, known_cell_types=FALSE)
+```
+
+
+```{r}
+#### the STIE-obtained cell types
+cell_types = result_cluster$cell_types
+
+#### subset the cell contour 
+contour2 = cell_contour[ match(names(cell_types), names(cell_contour)) ]
+
+#### plot the single cells along with their cell types onto the image
+plot_sub_image(im=im, w=5400, h=4100, xoff=8200, yoff=11200, 
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               contour=contour2, cell_types=cell_types, color_use=colors2, 
+               plot_spot=F, plot_cell=T)
+```
+![wiki_figure3_2](https://user-images.githubusercontent.com/5418417/170846598-77dd5156-cd84-4a7b-87a1-1984520fafb8.jpg)
+
+
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+
+## 6. Spatially resolved cell-cell interaction
+Given the STIE-obtained single cells with spatial information retained, we further investigated the spatially resolved cell-cell interaction on the tissue. We adapted CellChat, a toolkit and a database of interactions among ligands, receptors, and their cofactors, to quantitatively infer the cell-cell interaction, and meanwhile, take into account the cell spatial information.
+
+We first calculate the distance between cells. Here, we use 3nm as a cutoff of cell-cell distance to determine the potential cell-cell interaction. Users can specify other cutoffs depending on the specific biological mechanism.
+
+```{r}
+#### get cells within each spot based on cellular coordinates and spot coordinates
+ref_1nm = spot_radius*2/55
+
+#### calculate cell-cell distance
+STIE_result = result_deconv
+cell_dist = calculate_cell_dist(cells_on_spot = STIE_result$cells_on_spot, 
+                                dist_type="boundary", 
+                                dist_cutoff=3*ref_1nm,
+                                axis="Major" )
+
+#### convert the distance into the unit of nm
+cell_dist$d_nm = cell_dist$d/ref_1nm
+```
+We adapt the cellchat to fit the spatial transcriptomics data to determine the spatially resolved cell type interaction. Here, we set `database="mouse"`, to specify both mouse STRINGdb protein-protein interaction database and mouse CellChat ligand-receptor database.
+
+```{r}
+library(CellChat)
+
+#### run cellchat on the resolved single-cell level spatial transcriptome data
+cellchat <- get_STcellchat(STIE_result, ST_expr, database="mouse", db_category=NULL, max_reps=NULL )
+
+#### show the top sending and receiving pathways, through which the cell types communicate
+ht1 <- netAnalysis_signalingRole_heatmap(cellchat, color.use=colors, pattern = "outgoing")
+ht2 <- netAnalysis_signalingRole_heatmap(cellchat, color.use=colors, pattern = "incoming")
+ht1[1:30,] + ht2[1:30,]
+```
+
+![2](https://user-images.githubusercontent.com/5418417/168784486-a6ef9f26-3ca8-4614-a64b-83937eb7cd65.jpg)
+
+```{r}
+## draw the Circos plot of static cell-cell interaction weights/strength 
+## and spatially resolved cell-cell interaction weights/strength
+netVisual_STcellchat(cellchat, cell_dist, STIE_result$cell_types, color_use=colors)
+```
+![3](https://user-images.githubusercontent.com/5418417/170847285-b0b50e68-e77c-4c44-be75-fb63e1640231.jpg)
+
+
+To simplify the interpretation of complex intercellular interactions, we used non-negative matrix factorization (NMF) implemented by CellChat to identify the global interaction patterns beyond only exploring individual pathways. Both Cophenetic and Silhouette metrics begin to drop suddenly when the number of sending and receiving patterns are 5, suggesting the suitable number of patterns .
+
+```{r}
+library(NMF)
+library(ggalluvial)
+## plot Cophenetic and Silhouette metrics to select the suitable number of patterns
+selectK(cellchat, pattern = "outgoing")
+selectK(cellchat, pattern = "incoming")
+```
+
+![Cop1](https://user-images.githubusercontent.com/5418417/168798921-25d0f3d5-0bc0-4a95-ba30-5022f1bd828e.jpg)
+![Cop2](https://user-images.githubusercontent.com/5418417/168798956-3cc29143-72fe-44f0-892b-3cb9e801eda4.jpg)
+
+The heatmap of contribution of pathways (up) and cell types (bottom) to the pattern of sender and receiver. 
+
+```{r}
+## The sending patterns at k=5
+plot.new()
+cellchat <- identifyCommunicationPatterns(cellchat, pattern = "outgoing", k = 5, color.use=colors)
+```
+
+![4](https://user-images.githubusercontent.com/5418417/168784506-a2be2183-aeef-46c2-beca-9580f4871b19.jpg)
+
+```{r}
+## The receiving patterns at k=5
+plot.new()
+cellchat <- identifyCommunicationPatterns(cellchat, pattern = "incoming", k = 5, color.use=colors)
+```
+
+![5](https://user-images.githubusercontent.com/5418417/168784513-66b62855-eeca-40ea-a025-0169d33bd46c.jpg)
+
+We plot the global sending and receiving patterns. Of note, 
+
+```{r}
+## plot the sending patterns, where patterns c(4,1,3,5,2) correspond 
+## to the cell type, CA1, CA2, CA3, DG and Glia, respectively
+for(i in 1:c(4,1,3,5,2))
+{
+    plot_STcellchat(cellchat, cell_dist, w=5400, h=4100, xoff=8200, yoff=11200, 
+                    im, x_scale=0.1, plot_object=paste0("Pattern ",i), 
+                    direction="outgoing", color_use=colors )
+}
+
+## plot the receiving patterns, where patterns c(4,3,2,1,5) correspond 
+## to the cell type, CA1, CA2, CA3, DG and Glia, respectively
+for(i in 1:c(4,3,2,1,5))
+{
+    plot_STcellchat(cellchat, cell_dist, w=5400, h=4100, xoff=8200, yoff=11200, 
+                    im, x_scale=0.1, plot_object=paste0("Pattern ",i), 
+                    direction="incoming", color_use=colors )
+}
+```
+
+![6](https://user-images.githubusercontent.com/5418417/168784527-3f9f9370-6abf-490f-aea0-149e2175e215.jpg)
+
+
+```{r}
+## We plot the sending and receiving signals for specific pathways of interest. 
+pathway.show <- c("NRXN", "CNTN", "PSAP")
+
+## sending pathway signal
+for(i in 1:length(pathway.show))
+{
+    plot_STcellchat(cellchat, cell_dist, 
+                    w=5400, h=4100, xoff=8200, yoff=11200, 
+                    im, x_scale=0.1,
+                    plot_object=pathway.show[i], 
+                    direction="outgoing", color_use=colors)
+
+## receiving pathway signal
+for(i in 1:length(pathway.show))
+{    
+    plot_STcellchat(cellchat, cell_dist, 
+                    w=5400, h=4100, xoff=8200, yoff=11200, 
+                    im, x_scale=0.1,
+                    plot_object=pathway.show[i], 
+                    direction="outgoing", color_use=colors)
+}
+```
+
+![7](https://user-images.githubusercontent.com/5418417/168799451-2f7228df-f757-49c9-a9d5-62112855c5b2.jpg)
+> [Back to above](https://github.com/zhushijia/STIE/wiki#contents)
+

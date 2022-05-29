@@ -129,6 +129,7 @@ for(i in 2:10)
         colors = get_my_colors(i, mode=2)
     }
     
+    #png("Hippo_cluster5.png", w=2000, h=2000, res=300)
     plot_sub_image(im=im, w=6000, h=5000, xoff=8000, yoff=10500, 
                    x_scale=0.1, spot_coordinates=spot_coordinates, 
                    contour=contour2, cell_types=cell_types, color_use=colors, plot_spot=F, plot_cell=T  )

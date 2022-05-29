@@ -8,16 +8,22 @@ run_imageJ_plugin(imageJ, plugin_macro = NULL, split_image_dir,
   feature_dir = split_image_dir, pattern = "jpg$")
 }
 \arguments{
-\item{imageJ}{}
+\item{imageJ}{a character value representing the path to imageJ excutable file}
 
-\item{plugin_macro}{}
+\item{plugin_macro}{a character value representing the path to the imageJ macro file (.ijm)}
 
-\item{split_image_dir}{}
+\item{split_image_dir}{a character value representing the path to save the split images}
 
-\item{feature_dir}{}
+\item{feature_dir}{a character value representing the path to save the cell segmentation and extracted morphological features}
 
-\item{pattern}{}
+\item{pattern}{a regular expression to select the image files of interest}
 }
 \description{
-run_imageJ_plugin
+run_imageJ_plugin runs the imageJ plugin in R
+}
+\seealso{
+\code{\link{split_image}}; \code{\link{merge_feature}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

@@ -18,7 +18,7 @@ for(i in 2:10)
     
     setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_hippocampus3/results/Kmeans")
     pdf(paste0("hippo_xoff8000_yoff10500_spot_Kmeans_cluster",i,".pdf") )
-    
+    # png(paste0("hippo_xoff8000_yoff10500_spot_Kmeans_cluster",i,".png"), w=2000, h=2000, res=300 )
     plot_sub_image(im=im, w=6000, h=5000, xoff=8000, yoff=10500, 
                    x_scale=0.1, spot_coordinates=spot_coordinates, 
                    plot_spot=T, plot_cell=F, spot_cols=spot_cols, fill_spot=T  )

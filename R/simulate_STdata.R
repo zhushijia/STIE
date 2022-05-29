@@ -1,8 +1,10 @@
 #' simulate_STdata
 #'
+#' simulate_STdata simulates the spot level ST data at a predefined spot size from the real ST data
+#'
 #' @param cells_coordinates 
-#' @param cell_types 
-#' @param Signature 
+#' @param cell_types a vector of character values with names representing the cell_id
+#' @param Signature a matrix of numeric values representing the cell type transcriptomic signature with row being the gene and column being the cell type
 #' @param spot_coordinates_ref 
 #' @param spot_diameter_pixel_ref 
 #' @param spot_size_ref 

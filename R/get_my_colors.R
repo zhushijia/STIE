@@ -1,13 +1,18 @@
 #' get_my_colors
 #'
-#' @param n 
-#' @param mode 
+#' get_my_colors generates a vector of colors
 #'
-#' @return
+#' @param n an integer value representing the number of colors
+#' @param mode an integer value from 1 to 3 representing the category of colors
+#'
+#' @return a vector of colors
 #' @export
-#'
-#' @examples
 #' 
+#' @author Shijia Zhu, \email{shijia.zhu@@UTsouthwestern.edu}
+#'
+#' @seealso \code{\link{plot_sub_image}}; 
+#'
+#'
 get_my_colors <- function(n, mode=1)
 {
     if(mode==1)

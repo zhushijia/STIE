@@ -7,13 +7,19 @@
 get_my_colors(n, mode = 1)
 }
 \arguments{
-\item{n}{}
+\item{n}{an integer value representing the number of colors}
 
-\item{mode}{}
+\item{mode}{an integer value from 1 to 3 representing the category of colors}
+}
+\value{
+a vector of colors
 }
 \description{
-get_my_colors
+get_my_colors generates a vector of colors
 }
-\examples{
-
+\seealso{
+\code{\link{plot_sub_image}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@UTsouthwestern.edu}
 }

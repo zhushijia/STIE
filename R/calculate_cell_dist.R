@@ -1,16 +1,15 @@
 #' calculate_cell_dist
 #'
-#' @param cells_on_spot a data frame indicating the cells on spots
-#' @param dist_type whether the distance is between cell centers or cell boundary 
-#' @param dist_cutoff a numeric value indicating the cutoff of maximum distance between two cells
-#' @param axis whether the distance is calculated along major or minor axis
+#' calculate_cell_dist calculates the distance between cells based on the cell coordinates
 #'
-#' @return
+#' @param cells_on_spot a data frame representing the cells on spots along with the cellular morphological features
+#' @param dist_type a boolean value indicating whether the distance calculated between cell centers or cell boundary 
+#' @param dist_cutoff a numeric value indicating the cutoff of maximum distance between two cells
+#' @param axis a boolean value indicating whether the distance is calculated along major or minor axis
+#'
+#' @return a matrix of numeric values representing the distance between each cell pair
 #' @export
 #'
-#' @examples
-#' 
-#' 
 #' 
 #' @author Shijia Zhu, \email{shijia.zhu@@UTsouthwestern.edu}
 #'

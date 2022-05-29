@@ -1,15 +1,21 @@
 #' run_imageJ_plugin
 #'
-#' @param imageJ 
-#' @param plugin_macro 
-#' @param split_image_dir 
-#' @param feature_dir 
-#' @param pattern 
+#' run_imageJ_plugin runs the imageJ plugin in R
+#'
+#' @param imageJ a character value representing the path to imageJ excutable file
+#' @param plugin_macro a character value representing the path to the imageJ macro file (.ijm)
+#' @param split_image_dir a character value representing the path to save the split images
+#' @param feature_dir a character value representing the path to save the cell segmentation and extracted morphological features
+#' @param pattern a regular expression to select the image files of interest
 #'
 #' @return
 #' @export
+#' 
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
 #'
-#' @examples
+#' @seealso \code{\link{split_image}}; \code{\link{merge_feature}}; 
+#' 
+#' 
 run_imageJ_plugin <- function( imageJ, plugin_macro=NULL, split_image_dir, feature_dir=split_image_dir, pattern="jpg$" )
 {
     

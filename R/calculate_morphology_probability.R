@@ -1,14 +1,14 @@
 #' calculate_morphology_probability
 #'
-#' calculate_morphology_probability calculate the morphological probability by assuming the normal distribution with parameters mu and sigma
+#' calculate_morphology_probability calculates the morphological probability by assuming the normal distribution with parameters mu and sigma
 #' 
-#' @param morphology_features a matrix of numeric values in size of cells*features representing the values of morphology_features for each cell, where the column names are the morphoglical features, and row names are cell ids
-#' @param feature_list a vector of characters in size of morphology features representing the morphology feature names used in the analysis
-#' @param mu  a vector of numeric values in size of morphology features representing the mean of the normal distribution
-#' @param sigma a vector of numeric values in size of morphology features representing the standard deviation of the normal distribution
-#' @param scaled boolean value representing whether the probability is scaled
+#' @param morphology_features a matrix of numeric values in the size of cells X features, representing the values of morphology_features for each cell, where the column names are the morphoglical features, and row names are cell ids
+#' @param feature_list a vector of characters representing the names of morphology features used in the STIE model
+#' @param mu  a vector of numeric values representing the mean of morphological features under normal distribution
+#' @param sigma  a vector of numeric values representing the standard deviation of morphological features under normal distribution
+#' @param scaled boolean value representing whether the sum of probability is scaled to be 1
 #'
-#' @return a matrix of numeric values in size of cells*features representing the values of morphology feature probability for each cell
+#' @return a matrix of numeric values in size of cells X features representing the values of morphology feature probability for each cell
 #' 
 #' @export
 #'

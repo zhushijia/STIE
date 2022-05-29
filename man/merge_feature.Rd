@@ -4,13 +4,27 @@
 \alias{merge_feature}
 \title{merge_feature}
 \usage{
-merge_feature(feature_dir, tag = NULL)
+merge_feature(feature_dir)
 }
 \arguments{
-\item{feature_dir}{}
-
-\item{tag}{}
+\item{feature_dir}{a character value representing the directory where imageJ extracts the cell segmentation and cellular morphological features}
+}
+\value{
+A list containing the follow components:
+\itemize{
+ \item {cell_feature} a data frame representing the cellular morphological features, with row being the single cell and the column being the morphological feature
+ \item {cell_contour} a list of cell contour, where each item is a data frame representing the contour coordinates
+}
 }
 \description{
-merge_feature
+merge_feature merges the morphological features from all split images
+}
+\references{
+
+}
+\seealso{
+\code{\link{split_image}}; \code{\link{run_imageJ_plugin}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

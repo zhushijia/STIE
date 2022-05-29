@@ -7,12 +7,18 @@
 read_image(image, croparea = NULL, x_scale = 1)
 }
 \arguments{
-\item{image}{}
+\item{image}{a character value indicating the path to the image}
 
-\item{croparea}{}
+\item{croparea}{a character value in the format of "width,height,xoff,yoff" for cropping the image}
 
-\item{x_scale}{}
+\item{x_scale}{a numeric value from 0 to 1 for resizing the image}
+}
+\value{
+an EBImage object of the cropped and resized image
 }
 \description{
-read_image
+read_image loads the region of interest from an image at a predefined rescaled size
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

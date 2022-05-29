@@ -1,21 +1,39 @@
 #' STIE
 #'
-#' @param ST_expr 
-#' @param Signature 
-#' @param cells_on_spot 
-#' @param features 
-#' @param lambda 
-#' @param steps 
-#' @param morphology_steps 
-#' @param known_signature 
-#' @param known_cell_types
-#' @param min_cells 
+#' STIE: the main STIE function
+#'
+#' @param ST_expr a matrix of gene expression representing the spot level gene expression, with row being the spot and column being the gene
+#' @param Signature a matrix of gene expression representing the cell type transcriptomic signature, with row being the gene and column being the cell type
+#' @param cells_on_spot a data frame representing the cells on spots along with the cellular morphological features, where "cell_id" represents the unique cell id and "spot" represents the uniqe spot id
+#' @param features a vector of character values, representing the morphological features used in the STIE model
+#' @param lambda a numeric value representing the shrinkage penalty of nuclear morphology
+#' @param steps an integer value representing the number of iterative steps of EM algorithm 
+#' @param morphology_steps an integer value representing the number of iterative steps of updating mophological model before updating gene expression model
+#' @param known_signature a boolean value representing whether the transcriptomic signature is given. If TRUE, STIE performs single cell deconvolution
+#' @param known_cell_types a boolean value representing whether the cell typing is given. If TRUE, STIE will perform cell type signature learning
+#' @param min_cells  a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated
 #' 
 #'
-#' @return
+#' @return A list containing the follow components:
+#' \itemize{
+#'  \item {lambda} a numeric value representing the shrinkage penalty of nuclear morphology, which is the same data frame cells_on_spot with the input
+#'  \item {mu} a vector of numeric values representing the means of morphological features
+#'  \item {sigma} a vector of numeric values representing the standard deviations of morphological features
+#'  \item {PE_on_spot} a matrix of cell type probabilities for each spot estimated from the spot gene expression, where the row is the spot and column is the cell type
+#'  \item {PM_on_cell} a matrix of cell type probabilities for each cell estimated from the cellular morphological features, where the row is the cell and column is the cell type
+#'  \item {PME_uni_cell} a matrix of cell type probabilities for non-redundant cells estimated from both spot gene expression and cellular morphological features, where the row is the cell and column is the cell type
+#'  \item {cell_types} a vector of character values representing the cell type for each cell, where the names(cell_types) are the unique cell ids
+#'  \item {uni_cell_types} a vector of character values representing the cell type of unqiue cells with redundant cells eliminated 
+#'  \item {Signature} a matrix of gene expression in gene X cell type. During deconvolution, it is the same with the input. During clustering, it is the re-estimated signature from the ST data. 
+#'  \item {cells_on_spot} a data frame representing the cells on spots along with the cellular morphological features, which is the same data frame cells_on_spot with the input
+#' }
+#' 
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
 #' @export
 #'
-#' @examples
+#' @references
+#'
+#' @seealso \code{\link{get_cells_on_spot}}; \code{\link{split_image}}; \code{\link{run_imageJ_plugin}}; \code{\link{merge_feature}};
 #' 
 #' 
 STIE <- function(ST_expr, Signature, cells_on_spot, features, 
@@ -23,8 +41,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
                   known_signature=TRUE, known_cell_types=FALSE, min_cells=2)
 {
     
-    cl <- makeCluster( detectCores() )
-    registerDoParallel(cl)
+    #cl <- makeCluster( detectCores() )
+    #registerDoParallel(cl)
     
     #cells_on_spot <- get_cells_on_spot( cell_coordinates=cell_coordinates, spot_coordinates, 2*spot_radius)
     spot_id = as.character(cells_on_spot$spot)
@@ -238,7 +256,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     }
     
 
-    stopCluster(cl)
+    #stopCluster(cl)
     
     PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
     PME_uni_cell = apply(PME_on_cell, 2, function(x) tapply(x, cell_id, max) )

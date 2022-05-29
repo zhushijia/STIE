@@ -7,10 +7,20 @@
 calculate_spot_radius(spot_coordinates, fct)
 }
 \arguments{
-\item{spot_coordinates}{}
+\item{spot_coordinates}{a data frame representing the spot coordinates, 
+where the "barcode" column represents the spot id, "pixel_x" and "pixel_y" represent the coordinates on x-axis and y-axis, respectively}
 
-\item{fct}{}
+\item{fct}{a numeric value representing the ratio between spot radius and spot center distance}
+}
+\value{
+a numeric value representing the spot radius
 }
 \description{
-calculate_spot_radius
+calculate_spot_radius calculates the spot radius based on the ratio between spot radius and spot center distance
+}
+\seealso{
+\code{\link{get_cells_on_spot}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

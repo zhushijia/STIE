@@ -8,21 +8,21 @@ calculate_morphology_probability(morphology_features, feature_list, mu,
   sigma, scaled = TRUE)
 }
 \arguments{
-\item{morphology_features}{a matrix of numeric values in size of cells*features representing the values of morphology_features for each cell, where the column names are the morphoglical features, and row names are cell ids}
+\item{morphology_features}{a matrix of numeric values in the size of cells X features, representing the values of morphology_features for each cell, where the column names are the morphoglical features, and row names are cell ids}
 
-\item{feature_list}{a vector of characters in size of morphology features representing the morphology feature names used in the analysis}
+\item{feature_list}{a vector of characters representing the names of morphology features used in the STIE model}
 
-\item{mu}{a vector of numeric values in size of morphology features representing the mean of the normal distribution}
+\item{mu}{a vector of numeric values representing the mean of morphological features under normal distribution}
 
-\item{sigma}{a vector of numeric values in size of morphology features representing the standard deviation of the normal distribution}
+\item{sigma}{a vector of numeric values representing the standard deviation of morphological features under normal distribution}
 
-\item{scaled}{boolean value representing whether the probability is scaled}
+\item{scaled}{boolean value representing whether the sum of probability is scaled to be 1}
 }
 \value{
-a matrix of numeric values in size of cells*features representing the values of morphology feature probability for each cell
+a matrix of numeric values in size of cells X features representing the values of morphology feature probability for each cell
 }
 \description{
-calculate_morphology_probability calculate the morphological probability by assuming the normal distribution with parameters mu and sigma
+calculate_morphology_probability calculates the morphological probability by assuming the normal distribution with parameters mu and sigma
 }
 \examples{
 # 

@@ -7,26 +7,20 @@
 get_cells_on_spot(cell_coordinates, spot_coordinates, spot_radius)
 }
 \arguments{
-\item{cell_coordinates}{a matix of numeric values represensting the location of each cell, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively}
+\item{cell_coordinates}{a matix of numeric values represensting the coordinate of each cell, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively}
 
-\item{spot_coordinates}{a matix of numeric values represensting the location of each spot, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively}
+\item{spot_coordinates}{a matix of numeric values represensting the coordinate of each spot, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively}
 
 \item{spot_radius}{a numric value, representing the spot radius}
 }
 \description{
 get_cells_on_spot finds the cells falling in each spot based on the cell coordinates, spot coordinates and spot radius
 }
-\examples{
-
-
-
-
-}
 \references{
 
 }
 \seealso{
-\code{\link{update_morphology_parameter}}; \code{\link{get_cells_on_spot}};
+\code{\link{calculate_spot_radius}};
 }
 \author{
 Shijia Zhu, \email{shijia.zhu@UTsouthwestern.edu}

@@ -30,8 +30,9 @@ dataSC = counts[,match( rownames(annot), colnames(counts) )]
 all(rownames(annot)==colnames(dataSC))
 annot$celltypes = gsub(" |-", "", as.character(annot$celltype_major) )
 
-uni_celltypes = unique(annot$celltypes)
-uni_celltypes = setdiff( uni_celltypes, c("PVL","Myeloid") )
+celltypes = annot$celltypes
+uni_celltypes = unique(celltypes)
+#uni_celltypes = setdiff( uni_celltypes, c("PVL","Myeloid") )
 set.seed(1234567)
 selected = do.call(c, lapply(uni_celltypes, function(x) {
     index = which(celltypes==x)
@@ -56,7 +57,7 @@ cluster_markers_all <- Seurat::FindAllMarkers(object = breastcancer_sc,
 
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/SPOTlight")
-save( breastcancer_sc, cluster_markers_all, file ="breastcancer_sc_cluster_markers_all.RData"  )
+save( breastcancer_sc, cluster_markers_all, file ="breastcancer_sc_cluster_markers_all_full_signature.RData"  )
 
 
 

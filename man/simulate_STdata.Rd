@@ -12,9 +12,9 @@ simulate_STdata(cells_coordinates, cell_types, Signature,
 \arguments{
 \item{cells_coordinates}{}
 
-\item{cell_types}{}
+\item{cell_types}{a vector of character values with names representing the cell_id}
 
-\item{Signature}{}
+\item{Signature}{a matrix of numeric values representing the cell type transcriptomic signature with row being the gene and column being the cell type}
 
 \item{spot_coordinates_ref}{}
 
@@ -31,7 +31,7 @@ simulate_STdata(cells_coordinates, cell_types, Signature,
 \item{ncore}{}
 }
 \description{
-simulate_STdata
+simulate_STdata simulates the spot level ST data at a predefined spot size from the real ST data
 }
 \examples{
 

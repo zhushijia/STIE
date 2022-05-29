@@ -23,7 +23,7 @@ for(i in 2:10)
     
     setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/Kmeans")
     pdf(paste0("Breastcancer_spot_Kmeans_cluster",i,".pdf") )
-    
+    # png(paste0("Breastcancer_spot_Kmeans_cluster",i,".png"), w=2000, h=2000, res=300 )
     plot_sub_image(im=im, image_transparency=0, 
                    x_scale=args$x_scale, spot_coordinates=spot_coordinates, 
                    plot_spot=T, plot_cell=F, spot_cols=spot_cols, fill_spot=T  )

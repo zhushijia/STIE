@@ -8,21 +8,19 @@ calculate_cell_dist(cells_on_spot, dist_type = c("center", "boundary"),
   dist_cutoff = Inf, axis = c("Minor", "Major"))
 }
 \arguments{
-\item{cells_on_spot}{a data frame indicating the cells on spots}
+\item{cells_on_spot}{a data frame representing the cells on spots along with the cellular morphological features}
 
-\item{dist_type}{whether the distance is between cell centers or cell boundary}
+\item{dist_type}{a boolean value indicating whether the distance calculated between cell centers or cell boundary}
 
 \item{dist_cutoff}{a numeric value indicating the cutoff of maximum distance between two cells}
 
-\item{axis}{whether the distance is calculated along major or minor axis}
+\item{axis}{a boolean value indicating whether the distance is calculated along major or minor axis}
+}
+\value{
+a matrix of numeric values representing the distance between each cell pair
 }
 \description{
-calculate_cell_dist
-}
-\examples{
-
-
-
+calculate_cell_dist calculates the distance between cells based on the cell coordinates
 }
 \references{
 

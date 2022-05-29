@@ -9,24 +9,33 @@ split_image(image, split_dir, w = 3000, h = 3000, margin = 100,
   grayscale = FALSE)
 }
 \arguments{
-\item{image}{}
+\item{image}{a character value representing the path to the image file}
 
-\item{split_dir}{}
+\item{split_dir}{a character value representing the directory to save the split images}
 
-\item{w}{}
+\item{w}{an integer value representing the width of the split images}
 
-\item{h}{}
+\item{h}{an integer value representing the height of the split images}
 
-\item{margin}{}
+\item{margin}{an integer value representing the margin of one split image overlapping with others}
 
-\item{x_scale}{}
+\item{x_scale}{a numeric value from 0 to 1 for resizing the image}
 
-\item{spot_coordinates}{}
+\item{spot_coordinates}{a data frame of spot coordiantes with row representing the spot and column representing the X and Y coordinates}
 
-\item{rgbscale}{}
+\item{rgbscale}{a boolean value indicating whether to write out split images in RGB scale}
 
-\item{grayscale}{}
+\item{grayscale}{a boolean value indicating whether to write out split images in grey scale. If rgbscale==FALSE and grayscale==FALSE, then output the split images in original scale}
 }
 \description{
-split_image
+split_image splits a large image into small ones at a predefined size
+}
+\references{
+
+}
+\seealso{
+\code{\link{merge_feature}}; \code{\link{run_imageJ_plugin}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

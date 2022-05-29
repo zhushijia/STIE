@@ -177,24 +177,41 @@ data.frame( x = apply(c3,1,function(x) colnames(c3)[which.max(x[1:n])] ),
 if(0)
 {
     im_scaled <- read_image(image=args$image, x_scale=args$x_scale)
+    im_scaled <- im_scaled*0 + 1
     
     cells$pixel_x = cells$centroid_x0 * args$x_scale
     cells$pixel_y = cells$centroid_y0 * args$x_scale
     uni_celltypes = unique(cells$nucleus_class)
-    # c("stroma", "necrosis", "lymphocyte", "blood", "tumor", "ductal epithelium", "macrophage")
-    cols = c("purple", "yellow", "green", "red", "blue", "black","cyan")
+    uni_celltypes = c("stroma", "lymphocyte", "macrophage", "ductal epithelium", "necrosis", "tumor" )
+    cols =          c("darkred", "darkgreen",      "cyan",          "steelblue",      "yellow",  "black" )
+    colors = col2rgb(cols)
+    colors = apply(colors,2,function(x) rgb(x[1],x[2],x[3],max=255,alpha=0.5*255) )
+    cc = data.frame(uni_celltypes, cols, colors)
+    
+    X0 = subset( cells, nucleus_class%in%uni_celltypes )
+    num = sort(table(X0$nucleus_class),decreasing=T)
+    #cc = cc[match( names(num), as.character(cc$uni_celltypes) ), ]
     
     setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/DL")
-    pdf("Breast_Cancer_FFPE_DL_celltypes_information_model40_image20.pdf")
+    #pdf("Breast_Cancer_FFPE_DL_celltypes_information_model40_image20.pdf")
+    png("Breast_Cancer_FFPE_DL_celltypes_information_model40_image20.png", width=2000, height=2000, res=300)
     display(im_scaled, method='raster')
     for(i in 1:length(uni_celltypes))
     {
-        X = subset( cells, nucleus_class==uni_celltypes[i] )[,c('pixel_x','pixel_y')]
-        points(X,cex=0.1,col=cols[i])
+        X = subset( cells, nucleus_class==as.character(cc$uni_celltypes)[i] )[,c('pixel_x','pixel_y')]
+        points(X, cex=0.2, col=as.character(cc$cols)[i], pch=16)
     }
-    plot(NA,xlim=c(0,10),ylim=c(0,10))
-    legend('topright',legend=uni_celltypes,col=cols,pch=1)
+    #plot(NA,xlim=c(0,10),ylim=c(0,10))
+    #legend('topright',legend=uni_celltypes,col=cols,pch=1)
     
     dev.off()
+    
+    png("Breast_Cancer_FFPE_DL_celltypes_information_model40_image20_2.png", width=2000, height=2000, res=300)
+    X = X0[,c('pixel_x','pixel_y')]
+    col = cols[ match( as.character(X0$nucleus_class), uni_celltypes) ]
+    plot(im_scaled)
+    points(X, cex=0.2, col=col, pch=16)
+    dev.off()
+    
     
 }

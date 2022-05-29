@@ -89,24 +89,32 @@ save( ST_expr_sim, cells_on_spot_sim, spot_coordinates_sim,
 
 k = 6
 ri = 10
-la = 0
+la = 1000
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
 x = load("HumanBreastCancer_clustering_2.5xSpot_lambda1000.RData")
 y = load( paste0("Breastcancer_simulation_highresolution_",ri,"nm_from_STIE_clustering",k,"_reRunWtih_lambda",la,".RData") )
 result = results[[k]]
 
+index = apply(stie_nnls,2,which.max)
+index1 = c(1,6,3,2,4,5)
+kmeans_nnls_1 = kmeans_nnls[,index1]
+stie_nnls_1 = stie_nnls[,index1]
+kmeans_dwls_1 = kmeans_dwls[,index1]
+stie_dwls_1 = stie_dwls[,index1]
+index2 = apply(stie_nnls_1,2,which.max)
+
 table2df <- function(t) {
     data.frame(ID=rownames(t), do.call(rbind, lapply(1:nrow(t),function(i) t[i,])) )
 }
 
-index = apply(stie_nnls,2,which.max)
 r = result$cell_types
 s = stie$cell_types
 n = unique(names(r))
 r = r[match(n,names(r))]
 s = s[match(n,names(s))]
-t2 = table(r,s)[index,]
+t2 = table(r,s)[index1,]
+t2 = t2[,apply(t2,1,which.max)]
 sum(diag(t2))/sum(t2)
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE/clustering_visualization")
@@ -117,15 +125,16 @@ write.table(table2df(t2), paste0("overlap_STIEvsKmeans_Breastcancer_simulation_h
 pdf( paste0("Breastcancer_simulation_highresolution_",ri,"nm_from_STIE_clustering",k,"_reRunWtih_lambda",la,".pdf"), w=10, h=8 )
 
 myCol = c("steelblue",'darkgreen',"darkorange",'yellow','cyan','darkred')
+myCol_1 = myCol[index1]
 
 layout(matrix(1))
 par(mar=c(2,2,2,2))
 par(mfrow=c(2,3))
-barplot(kmeans_nnls[index, ], col=myCol, ylim=c(0,1), border='white')
-barplot(stie_nnls[index, ], col=myCol, ylim=c(0,1), border='white')
+barplot(kmeans_nnls_1[index2, ], col=myCol_1, ylim=c(0,1), border='white')
+barplot(stie_nnls_1[index2, ], col=myCol_1, ylim=c(0,1), border='white')
 plot.new()
-barplot(kmeans_dwls[index, ], col=myCol, ylim=c(0,1), border='white')
-barplot(stie_dwls[index, ], col=myCol, ylim=c(0,1), border='white')
+barplot(kmeans_dwls_1[index2, ], col=myCol_1, ylim=c(0,1), border='white')
+barplot(stie_dwls_1[index2, ], col=myCol_1, ylim=c(0,1), border='white')
 
 # true low resolution STIE clustering
 cell_types = result$cell_types

@@ -1,14 +1,23 @@
 #' load_STdata
 #'
-#' @param sample_names 
-#' @param sample_dir 
-#' @param umi_cutoff 
-#' @param is_normalized 
+#' @param sample_names a character value representing the sample name
+#' @param sample_dir a character value representing the path where spaceranger generate the read count
+#' @param umi_cutoff an integer value representing the UMI count to filter spots
+#' @param is_normalized a boolean value indicating whether to normalize the raw read count
 #'
-#' @return
+#' @return A list containing the follow components:
+#' \itemize{
+#'  \item {matrix} a matrix of raw read count on the spot
+#'  \item {normalized_matrix} a matrix of normalized read count on the spot
+#'  \item {bcs_merge} a data frame representing the spot information
+#'  \item {images_tibble} an image tibble object for the ST matched image
+#' }
+#' 
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
 #' @export
 #'
-#' @examples
+#' @references
+#'
 #' 
 #' 
 load_STdata <- function( sample_names, sample_dir, umi_cutoff=0, is_normalized=TRUE ) {

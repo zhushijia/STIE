@@ -4,10 +4,10 @@ Title: Spatial Transcriptome Image and Expression integration enable single-cell
 Version: 2.0.1
 Author: Shijia Zhu
 Maintainer: Shijia Zhu <shijia.zhu@UTsouthwestern.edu>
-Description: STIE asdfasdfasdfasdfasdfasdf
+Description: STIE Transcriptome Image and Expression integration enable single-cell level spatial analysis
 License: LGPL-3
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 6.1.1
 NeedsCompilation: no
 Packaged: 2017-08-14 06:22:40 UTC; shijiazhu

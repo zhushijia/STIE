@@ -1,10 +1,12 @@
 #' solveNNLS
 #'
-#' @param S 
-#' @param B 
-#' @param scaled 
+#' solveNNLS solves the linear regression model with non-negative regression coefficients
 #'
-#' @return
+#' @param S a matrix of cell type transcriptomic signature with row representing the gene and column representing the cell type 
+#' @param B a vector of bulk gene expression with row representing the gene and column representing the sample
+#' @param scaled a boolean value indicating whether to scale the sum of cell type proportions to be 1
+#'
+#' @return a vector of non-negative regression coefficients on cell type transcriptomic signatures
 #' @export
 #'
 #' @examples

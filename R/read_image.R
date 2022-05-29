@@ -1,13 +1,16 @@
 #' read_image
 #'
-#' @param image 
-#' @param croparea 
-#' @param x_scale 
+#' read_image loads the region of interest from an image at a predefined rescaled size
 #'
-#' @return
+#' @param image a character value indicating the path to the image
+#' @param croparea a character value in the format of "width,height,xoff,yoff" for cropping the image 
+#' @param x_scale a numeric value from 0 to 1 for resizing the image
+#'
+#' @return an EBImage object of the cropped and resized image
 #' @export
+#' 
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
 #'
-#' @examples
 read_image <- function(image, croparea=NULL, x_scale=1 ) {
     
     cat("Reading", image, "...\n")

@@ -38,13 +38,16 @@ save(results, file=paste0("HumanBreastCancer_clustering_",ri,"xSpot_lambda",la,"
 ############################################################
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/STIE")
-load("HumanBreastCancer_clustering.RData")
+#load("HumanBreastCancer_clustering.RData")
+ri = 2.5
+la = 1e3
+x = load( paste0("HumanBreastCancer_clustering_",ri,"xSpot_lambda",la,".RData"))
 
 pdf("HumanBreastCancer_clustering.pdf")
 
 for(i in 2:10)
 {
-    cell_types = result[[i]]$cell_types
+    cell_types = results[[i]]$cell_types
     contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
     
     myCol = c( "red", "blue", "green", "black", "cyan", "yellow", "purple", "steelblue",
@@ -58,6 +61,20 @@ for(i in 2:10)
                    contour=contour2, cell_types=cell_types, color_use=colors, 
                    plot_spot=F, plot_cell=T, 
                    axis_tick=0, axis_col='grey'  )
+    if(i==6)
+    {
+        png("HumanBreastCancer_cluster6.png", w=2000, h=2000, res=300)
+        colors = c("steelblue",'darkgreen',"darkorange",'yellow','cyan','darkred')
+        
+        plot_sub_image(im=im, image_transparency=0,
+                       x_scale=args$x_scale, spot_coordinates=spot_coordinates, 
+                       contour=contour2, cell_types=cell_types, color_use=colors, 
+                       plot_spot=F, plot_cell=T, 
+                       axis_tick=0, axis_col='grey'  )
+        dev.off()
+    }
+    
+    
 }
 
 dev.off()

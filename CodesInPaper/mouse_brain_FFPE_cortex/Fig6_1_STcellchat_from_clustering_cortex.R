@@ -3,9 +3,9 @@ library(NMF)
 library(ggalluvial)
 
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/AdultMouseBrain_FFPE/count_cortex/results/STIE")
-x = load("MouseBrainCortex_clustering.RData")
-
-STIE_result = result[[8]]
+#x = load("MouseBrainCortex_clustering.RData")
+x = load("MouseBrainCortex_clustering_2.5xSpot_lambda0.RData")
+STIE_result = results[[6]]
 
 cellchat <- get_STcellchat(STIE_result, ST_expr, database="mouse", db_category=NULL, max_reps=NULL )
 

@@ -2,8 +2,8 @@
 #'
 #' get_cells_on_spot finds the cells falling in each spot based on the cell coordinates, spot coordinates and spot radius
 #' 
-#' @param cell_coordinates a matix of numeric values represensting the location of each cell, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively
-#' @param spot_coordinates a matix of numeric values represensting the location of each spot, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively
+#' @param cell_coordinates a matix of numeric values represensting the coordinate of each cell, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively
+#' @param spot_coordinates a matix of numeric values represensting the coordinate of each spot, where columns "pixel_x" and "pixel_y" represent the x and y coordinates, respectively
 #' @param spot_radius a numric value, representing the spot radius
 #'
 #' @return A data frame containing the follow components:
@@ -11,18 +11,12 @@
 #'  \item {cell_id} character values representing the unique cell ids
 #'  \item {spot} character values representing the unique spot ids
 #' 
-#' @export
-#'
-#' @examples
-#'
-#' 
-#' 
-#' 
 #' @author Shijia Zhu, \email{shijia.zhu@@UTsouthwestern.edu}
 #'
+#' @export
 #' @references
 #'
-#' @seealso \code{\link{update_morphology_parameter}}; \code{\link{get_cells_on_spot}}; 
+#' @seealso \code{\link{calculate_spot_radius}}; 
 #'
 #'
 get_cells_on_spot <- function( cell_coordinates, spot_coordinates, spot_radius)

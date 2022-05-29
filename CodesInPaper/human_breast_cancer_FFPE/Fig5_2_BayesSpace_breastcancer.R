@@ -56,6 +56,13 @@ if(0)
 ################################################################################################
 ####### output cluster
 ################################################################################################
+colorSpace <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", 
+                "#F29403", "#F781BF", "#BC9DCC", "#A65628", "#54B0E4", 
+                "#222F75", "#1B9E77", "#B2DF8A", "#E3BE00", "#FB9A99", 
+                "#E7298A", "#910241", "#00CDD1", "#A6CEE3", "#CE1261", 
+                "#5E4FA2", "#8CA77B", "#00441B", "#DEDC00", "#B3DE69", 
+                "#8DD3C7", "#999999")
+
 setwd("/archive/SCCC/Hoshida_lab/shared/fastq/SpatialTranscriptome/10X_public_dataset/HumanBreastCancer_FFPE/count/results/BayesSpace")
 x = load("breastcancer_enhanced_allGenes.RData")
 bs_enhanced = breastcancer.enhanced
@@ -96,27 +103,33 @@ for(i in 2:10)
     save( counts, cluster, file=paste0("cluster",i,".RData") )
     
     pdf( paste0("cluster",i,".pdf"), 20, 20 )
-    cols = c('red','purple',"darkorange",'darkgreen',"steelblue",'brown')
-    #clusterPlot(bs_enhanced, palette=cols)
-    clusterPlot(bs_enhanced, color="black") +
-        theme_bw() +
-        xlab("Column") +
-        ylab("Row") +
-        labs(fill="BayesSpace\ncluster", title="Spatial clustering")
+    
+    if(1) {
+        cols = colorSpace[1:i]
+        clusterPlot(bs_enhanced, palette=cols, color="darkgrey")
+    } else {
+        clusterPlot(bs_enhanced, color="black") +
+            theme_bw() +
+            xlab("Column") +
+            ylab("Row") +
+            labs(fill="BayesSpace\ncluster", title="Spatial clustering")
+    }
     dev.off()
     
     if(i==6) {
         pdf( paste0("cluster",i,"_for_figure.pdf"), w=20, h=20 )
+        #png( paste0("cluster",i,"_for_figure.png"), w=3000, h=3000, res=300 )
         cc = data.frame( cluster = c(5,4,3,1,2,6), 
                          colors = c("steelblue",'darkgreen',"darkorange",'yellow','cyan','darkred') )
         cols = as.character(cc$colors)[ order(cc$cluster) ]
-        clusterPlot(bs_enhanced, palette=cols)
+        #clusterPlot(bs_enhanced, palette=cols)
         clusterPlot(bs_enhanced, palette=cols, color="darkgrey")
-        clusterPlot(bs_enhanced, palette=cols, color="black")
+        #clusterPlot(bs_enhanced, palette=cols, color="black")
         dev.off()
     }
     if(i==7) {
         pdf( paste0("cluster",i,"_for_figure.pdf"), w=20, h=20 )
+        #png( paste0("cluster",i,"_for_figure.png"), w=3000, h=3000, res=300 )
         cc = data.frame( cluster = c(6,4,3,1,2,5,7), 
                          colors = c("steelblue",'darkgreen',"darkorange",'yellow','cyan','darkred','black') )
         cols = as.character(cc$colors)[ order(cc$cluster) ]

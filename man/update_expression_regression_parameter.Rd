@@ -9,24 +9,32 @@ update_expression_regression_parameter(Signature, Expr_on_spot_i,
   kfold = 10)
 }
 \arguments{
-\item{Signature}{}
+\item{Signature}{a matrix of gene expression in gene X cell type, representing cell type transcriptomic signatures}
 
-\item{Expr_on_spot_i}{}
+\item{Expr_on_spot_i}{a vector of numeric values representing the gene expression on the i-th spot}
 
-\item{PE_on_spot_i}{}
+\item{PE_on_spot_i}{a matrix of numeric values representing the probability of gene expression on the i-th spot}
 
-\item{PM_on_spot_i}{}
+\item{PM_on_spot_i}{a matrix of numeric values representing the probability of nuclear morphology on the i-th spot}
 
-\item{lambda}{}
+\item{lambda}{a numeric value representing shrinkage penalty of nuclear morphology}
 
-\item{scaled}{}
+\item{scaled}{a boolean value representing whether to scale the probability to be sum of 1}
 
-\item{kfold}{}
+\item{kfold}{an integer value for K-fold cross validation}
+}
+\value{
+a vector of numeric values, representing cell type proportion of the i-th spot
 }
 \description{
-update_expression_regression_parameter
+update_expression_regression_parameter re-estimates the parameters for the gene expression model in STIE
 }
-\examples{
+\references{
 
-
+}
+\seealso{
+\code{\link{solveNNLS}};
+}
+\author{
+Shijia Zhu, \email{shijia.zhu@utsouthwestern.edu}
 }

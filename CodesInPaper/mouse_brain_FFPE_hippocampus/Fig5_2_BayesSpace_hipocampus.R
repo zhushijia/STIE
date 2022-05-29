@@ -84,7 +84,7 @@ for(i in 2:10)
     setwd(outdirI)
     save( counts, cluster, file=paste0("cluster",i,".RData") )
     
-    pdf( paste0("cluster",i,".pdf") )
+    pdf( paste0("cluster",i,".pdf"), w=20, h=20 )
     clusterPlot(bs_enhanced, color="black") +
         theme_bw() +
         xlab("Column") +
@@ -94,6 +94,7 @@ for(i in 2:10)
     
     if(i==5) {
         pdf( paste0("cluster",i,"_for_figure.pdf") )
+        #png( paste0("cluster",i,"_for_figure.png"), w=2000, h=2000, res=300)
         cols = c('orange','blue','green','magenta','black')
         clusterPlot(bs_enhanced, palette=cols)
         dev.off()

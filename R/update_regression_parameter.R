@@ -1,17 +1,23 @@
 #' update_expression_regression_parameter
 #'
-#' @param Signature 
-#' @param Expr_on_spot_i 
-#' @param PE_on_spot_i 
-#' @param PM_on_spot_i 
-#' @param lambda 
-#' @param scaled 
-#' @param kfold 
+#' update_expression_regression_parameter re-estimates the parameters for the gene expression model in STIE
 #'
-#' @return
+#' @param Signature a matrix of gene expression in gene X cell type, representing cell type transcriptomic signatures 
+#' @param Expr_on_spot_i a vector of numeric values representing the gene expression on the i-th spot
+#' @param PE_on_spot_i a matrix of numeric values representing the probability of gene expression on the i-th spot
+#' @param PM_on_spot_i a matrix of numeric values representing the probability of nuclear morphology on the i-th spot
+#' @param lambda a numeric value representing shrinkage penalty of nuclear morphology
+#' @param scaled a boolean value representing whether to scale the probability to be sum of 1
+#' @param kfold an integer value for K-fold cross validation 
+#'
+#' @return a vector of numeric values, representing cell type proportion of the i-th spot
 #' @export
 #'
-#' @examples
+#' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
+#'
+#' @references
+#'
+#' @seealso \code{\link{solveNNLS}}; 
 #' 
 #' 
 update_expression_regression_parameter <- function( Signature, Expr_on_spot_i, 
