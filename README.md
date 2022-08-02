@@ -3,7 +3,7 @@ Spatial Transcriptome Image and Expression integration enables single-cell level
 
 ## Description
 STIE is a novel computational method tailored for spatial transcriptomics data analysis, which integrated spot level gene expression, nuclear segmentation, and nuclear morphology to perform cell type deconvolution/convolution and clustering, therefore enabling the single-cell level spatial transcriptomics anlayiss.
-![Figure1_STIE_flowchart2](https://user-images.githubusercontent.com/5418417/168800169-94375fdf-9e42-40b5-976e-b707365cf4ca.jpg)
+![Figure1](https://user-images.githubusercontent.com/5418417/182406531-3f623ed0-41ad-484c-9c77-f1707d2fc34c.jpg)
 
 
 ## Dependencies on packages
