@@ -11,7 +11,7 @@
 #'  \item {sigma} a vector of numeric values representing the standard deviations of morphological features
 #'  \item {PE_on_spot} a matrix of cell type probabilities for each spot estimated from the spot gene expression, where the row is the spot and column is the cell type
 #'  \item {PM_on_cell} a matrix of cell type probabilities for each cell estimated from the cellular morphological features, where the row is the cell and column is the cell type
-#'  \item {PME_uni_cell} a matrix of cell type probabilities for non-redundant cells estimated from both spot gene expression and cellular morphological features, where the row is the cell and column is the cell type
+#'  \item {PME_uni_cell} a matrix of cell type probabilities for each cell estimated from both spot gene expression and cellular morphological features, where the row is the cell and column is the cell type
 #'  \item {cell_types} a vector of character values representing the cell type for each cell, where the names(cell_types) are the unique cell ids
 #'  \item {uni_cell_types} a vector of character values representing the cell type of unqiue cells with redundant cells eliminated 
 #'  \item {Signature} a matrix of gene expression in gene X cell type. During deconvolution, it is the same with the input. During clustering, it is the re-estimated signature from the ST data. 
