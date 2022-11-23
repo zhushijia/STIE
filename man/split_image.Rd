@@ -6,7 +6,7 @@
 \usage{
 split_image(image, split_dir, w = 3000, h = 3000, margin = 100,
   x_scale = 1, spot_coordinates = NULL, rgbscale = FALSE,
-  grayscale = FALSE)
+  grayscale = FALSE, layer = 1)
 }
 \arguments{
 \item{image}{a character value representing the path to the image file}
