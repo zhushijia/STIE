@@ -22,12 +22,13 @@
 #' 
 split_image <- function(image, split_dir, w=3000, h=3000, margin=100, 
                       x_scale=1, spot_coordinates=NULL, 
-                      rgbscale=FALSE, grayscale=FALSE) {
+                      rgbscale=FALSE, grayscale=FALSE, layer=1) {
     
     cat("Reading", image, "...\n")
     dir.create(split_dir, recursive = T)
     
     im <- image_read(path = image)
+    im <- im[layer]
     
     iminf <- image_info(im)
     width <- iminf$width

@@ -45,6 +45,9 @@ update_expression_regression_parameter <- function( Signature, Expr_on_spot_i,
         bzero <- c(rep(0,t))
         solution <- solve.QP(D,d,A)$solution
         names(solution) <- colnames(Signature)
+        
+        solution[solution<0] = 1e-100
+        
         if(scaled) solution <- solution/sum(solution)
         solution
     }

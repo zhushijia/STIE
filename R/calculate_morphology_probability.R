@@ -31,11 +31,18 @@ calculate_morphology_probability <- function(morphology_features, feature_list, 
     colnames(PM) = rownames(mu)
     
     for(t in 1:nrow(mu)) {
-        PM[,t] <- apply(morphology_features[,feature_list], 1, function(x) 
+        PM[,t] <- apply( as.matrix(morphology_features[,feature_list]), 1, function(x) 
             prod( dnorm( as.numeric(x), mean=as.numeric(mu[t,feature_list]), sd=as.numeric(sigma[t,feature_list]) )))
     }
+    
+    PM[PM<0] = 1e-100
     
     if(scaled) PM = t( apply(PM, 1, function(x) x/sum(x) ) )
     PM
 }
+
+
+
+
+
 

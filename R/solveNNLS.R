@@ -20,6 +20,9 @@ solveNNLS <- function(S, B, scaled=T) {
     solution<-solve.QP(D,d,A,bzero)$solution
     names(solution)<-colnames(S)
     solution = abs(solution)
+    
+    solution[solution<0] = 1e-100
+    
     if(scaled) solution = solution/sum(solution)
     return(solution)
 }

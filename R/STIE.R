@@ -37,8 +37,8 @@
 #' 
 #' 
 STIE <- function(ST_expr, Signature, cells_on_spot, features, 
-                  lambda=0, steps=30, morphology_steps=ceiling(steps/3),
-                  known_signature=TRUE, known_cell_types=FALSE, min_cells=2)
+                 lambda=0, steps=30, morphology_steps=ceiling(steps/3),
+                 known_signature=TRUE, known_cell_types=FALSE, min_cells=2)
 {
     
     #cl <- makeCluster( detectCores() )
@@ -74,8 +74,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         for(t in 1:nrow(mu))
         {
             ford = order(PE_on_spot[,t],decreasing=T)
-            mu[t,] = apply( subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features], 2, mean ) 
-            sigma[t,] = apply( subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features], 2, sd ) 
+            mu[t,] = apply( as.matrix(subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features]), 2, mean ) 
+            sigma[t,] = apply( as.matrix(subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features]), 2, sd ) 
         }
         
         PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
@@ -97,8 +97,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         for(t in 1:nrow(mu))
         {
             ford = order(PE_on_spot[,t],decreasing=T)
-            mu[t,] = apply( subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features], 2, mean ) 
-            sigma[t,] = apply( subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features], 2, sd ) 
+            mu[t,] = apply( as.matrix(subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features]), 2, mean ) 
+            sigma[t,] = apply( as.matrix(subset(cells_on_spot,spot%in%rownames(PE_on_spot)[ford[1:40]])[,features]), 2, sd ) 
         }
         
         PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
@@ -109,9 +109,9 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     {
         annoted_cells = which(!is.na(cells_on_spot$cell_types))
         mu = do.call(cbind, lapply(features, function(f) tapply( cells_on_spot[,f], 
-                                                  as.character(cells_on_spot[,"cell_types"]), mean ) ))
+                                                                 as.character(cells_on_spot[,"cell_types"]), mean ) ))
         sigma = do.call(cbind, lapply(features, function(f) tapply( cells_on_spot[,f], 
-                                                                 as.character(cells_on_spot[,"cell_types"]), sd ) ))
+                                                                    as.character(cells_on_spot[,"cell_types"]), sd ) ))
         colnames(mu) = colnames(sigma) = features
         
         coefs = table( as.character(cells_on_spot$spot), as.character(cells_on_spot$cell_types) )
@@ -171,8 +171,9 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         if( length(filtered)<ncol(Signature) )
         {
-            mu = mu_[filtered, ]
-            sigma = sigma_[filtered, ]
+            mu = as.matrix(mu_[filtered, ])
+            sigma = as.matrix(sigma_[filtered, ])
+            colnames(mu) = colnames(sigma) = features
             Signature = Signature_[ ,filtered]
             PE_on_spot = t( apply(PE_on_spot_[ ,filtered], 1, function(x) x/sum(x)) )
             PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
@@ -255,7 +256,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         cat("\n")
     }
     
-
+    
     #stopCluster(cl)
     
     PME_on_cell = t( apply(PM_on_cell*PE_on_cell,1,function(x)x/sum(x)) )
@@ -271,15 +272,15 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     #adjacent_similarity = get_adjacent_similarity(cells_on_spot, features, cell_types) 
     
     result <- list(lambda=lambda,
-         mu=mu, 
-         sigma=sigma, 
-         PE_on_spot = PE_on_spot,
-         PM_on_cell = PM_on_cell,
-         PME_uni_cell = PME_uni_cell, 
-         cell_types=cell_types,
-         uni_cell_types=uni_cell_types,
-         Signature=Signature,
-         cells_on_spot=cells_on_spot)
+                   mu=mu, 
+                   sigma=sigma, 
+                   PE_on_spot = PE_on_spot,
+                   PM_on_cell = PM_on_cell,
+                   PME_uni_cell = PME_uni_cell, 
+                   cell_types=cell_types,
+                   uni_cell_types=uni_cell_types,
+                   Signature=Signature,
+                   cells_on_spot=cells_on_spot)
     
     return(result)
 }
