@@ -162,7 +162,7 @@ plot_searchPath <- function(paths)
 plot_pathScore <- function(score,name=NULL)
 {
     par(mar=c(2,2,2,2))
-    n = length(paths)
+    n = length(score)
     f = length(score[[1]])
     ylim = range(do.call(c,score))
     ylim = c( ylim[1], ylim[1] + 1.5*(ylim[2]-ylim[1]) )
