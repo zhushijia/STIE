@@ -8,10 +8,12 @@
 #' @return A list containing the follow components:
 #' \itemize{
 #'  \item {rmse} a vector of numeric values representing RMSE for each spot
-#'  \item {cells_on_spot} a data frame representing the cells on spots along with the cellular morphological features, which is the same data frame cells_on_spot with the input
+#'  \item {mse} a data frame representing the cells on spots along with the cellular morphological features, which is the same data frame cells_on_spot with the input
 #'  \item {LL_Morp} a vector of numeric values representing RMSE for each spot
 #'  \item {LL_Expr} a data frame representing the cells on spots along with the cellular morphological features, which is the same data frame cells_on_spot with the input
 #'  \item {logLik} a data frame representing the cells on spots along with the cellular morphological features, which is the same data frame cells_on_spot with the input
+#'  \item {EM_diff2} a numeric value representing difference between morphology and expression-based estimation
+#'  \item {L2_sum} a numeric value representing MSE + lambda*EM_diff2
 #' }
 #' 
 #' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
@@ -52,7 +54,7 @@ get_summary <- function(STIE_result, ST_expr)
     #######################
     lambdas = rep(STIE_result$lambda,nrow(PE_on_spot))
     Expr_on_spot = ST_expr[ uni_spot_id, match(rownames(Signature),colnames(ST_expr)) ]
-
+    
     #######################
     celltypes_on_spot = table(spot_id, cell_types)
     if( ncol(celltypes_on_spot) < ncol(Signature) )
@@ -109,8 +111,9 @@ get_summary <- function(STIE_result, ST_expr)
     #################################################################################
     
     residuals = calculate_residues(B=celltypes_on_spot, X=Signature, Y=Expr_on_spot)
-    
+    names(residuals) = rownames(Expr_on_spot)
     mse = sapply( residuals, function(r) mean(r^2) )
+    #mse = sapply( residuals, function(r) sum(r^2) )
     rmse = mean(sqrt(mse))
     
     #################################################################################
@@ -135,33 +138,54 @@ get_summary <- function(STIE_result, ST_expr)
     #################################################################################
     ######### Q function
     #################################################################################
-    Qfunc_morph <- PME_on_cell*log(PM_on_cell)
-    names(Qfunc_morph) = rownames(PM_on_cell)
-    
-    Qfunc_expr = sapply( 1:nrow(Expr_on_spot), function(i) {
-        Expr_on_spot_i = as.numeric( Expr_on_spot[i,] )
-        PE_on_spot_i = PE_on_spot[i,]
-        PM_on_spot_i = PM_on_spot[i,]
-        PME_on_spot_i = PME_on_spot[i,]
-        PME_on_spot_i = PM_on_spot[i,]
-        lai = lambdas[i]
+    if(0) {
+        Qfunc_morph <- PME_on_cell*log(PM_on_cell)
+        names(Qfunc_morph) = rownames(PM_on_cell)
         
-        beta = solveOLS2(Signature, Expr_on_spot_i, PE_on_spot_i, PM_on_spot_i, 
-                         lambda = lai, scaled=FALSE)
+        Qfunc_expr = sapply( 1:nrow(Expr_on_spot), function(i) {
+            Expr_on_spot_i = as.numeric( Expr_on_spot[i,] )
+            PE_on_spot_i = PE_on_spot[i,]
+            PM_on_spot_i = PM_on_spot[i,]
+            PME_on_spot_i = PME_on_spot[i,]
+            PME_on_spot_i = PM_on_spot[i,]
+            lai = lambdas[i]
+            
+            beta = solveOLS2(Signature, Expr_on_spot_i, PE_on_spot_i, PM_on_spot_i, 
+                             lambda = lai, scaled=FALSE)
+            
+            S = sum(beta)
+            loss1 <- -sum( (Expr_on_spot_i - Signature %*% beta)^2 )/(2*sum(PME_on_spot_i))
+            loss2 <- t(PME_on_spot_i) %*% log(beta/S+1e-100) 
+            loss3 <- lai * sum((PE_on_spot_i - PM_on_spot_i )^2)
+            loss1 + loss3
+        })
+        names(Qfunc_expr) = uni_spot_id
         
-        S = sum(beta)
-        loss1 <- -sum( (Expr_on_spot_i - Signature %*% beta)^2 )/(2*sum(PME_on_spot_i))
-        loss2 <- t(PME_on_spot_i) %*% log(beta/S+1e-100) 
-        loss3 <- lai * sum((PE_on_spot_i - PM_on_spot_i )^2)
-        loss1 + loss3
-    })
-    names(Qfunc_expr) = uni_spot_id
+        Qfunc <- sum(Qfunc_morph) + sum(Qfunc_expr)
+    }
     
-    Qfunc <- sum(Qfunc_morph) + sum(Qfunc_expr)
+    #################################################################################
+    ######### L2 norm
+    #################################################################################
+    
+    q_theta = colSums(PME_on_cell)/sum(PME_on_cell)
+    q_theta = q_theta[colnames(PM_on_spot)]
+    PqM_on_spot = t(apply(PM_on_spot,1,function(x) (x*q_theta)/sum(x*q_theta) ))
+    
+    EM_diff2 = sum( (PqM_on_spot - PE_on_spot)^2)
+    MSE_sum2 = sum(sapply( residuals, function(r) sum(r^2) ))
+    L2_sum = MSE_sum2 + STIE_result$lambda * EM_diff2
+    
+    MSE_sum2_spot = sapply( residuals, function(r) sum(r^2) )
+    EM_diff2_spot = rowSums( (PqM_on_spot - PE_on_spot)^2 )
+    L2_sum_spot = MSE_sum2_spot + STIE_result$lambda * EM_diff2_spot
     
     
     list( mse=mse, rmse=rmse, 
-          Qfuc_Morp=sum(Qfunc_morph), Qfuc_Expr=sum(Qfunc_expr), Qfunc=Qfunc,
-          logLik_Morp=LL_Morp, logLik_Expr=LL_Expr, logLik=logLik)
+          logLik_Morp=LL_Morp, logLik_Expr=LL_Expr, logLik=logLik, 
+          EMdiff2=EM_diff2, MSEsum2=MSE_sum2, L2sum=L2_sum )
+    #Qfuc_Morp=sum(Qfunc_morph), Qfuc_Expr=sum(Qfunc_expr), Qfunc=Qfunc,
+    
     
 }
+

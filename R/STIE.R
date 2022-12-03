@@ -135,7 +135,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         step = step+1
         t0 = t1
-        cat( "step", step, "##########\n" )
+        cat( "step:", step, paste0("(lambda=",lambda,")"),"##########\n" )
         
         ########### 
         cat( "   recalculate PE and PM ... \n")
@@ -212,15 +212,21 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         }
         ########### 
         cat( "   updating expression regression parameter ... \n" ) 
+        
+        ## for P(q|M) = 
+        q_theta = colSums(PME_on_cell)/sum(PME_on_cell)
+        q_theta = q_theta[colnames(PM_on_spot)]
+        
         #ccoefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
         coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
             #cat(i,"\n")
             Expr_on_spot_i = as.matrix( ST_expr2[,i] )
             PE_on_spot_i = PE_on_spot[i,]
-            PM_on_spot_i = PM_on_spot[i,]
+            #PM_on_spot_i = PM_on_spot[i,]
+            PqM_on_spot_i = (PM_on_spot[i,]*q_theta) / sum(PM_on_spot[i,]*q_theta)
             update_expression_regression_parameter(Signature, 
                                                    Expr_on_spot_i, PE_on_spot_i, 
-                                                   PM_on_spot_i, lambda = lambda, 
+                                                   PqM_on_spot_i, lambda = lambda, 
                                                    scaled=F, kfold=10 )
         }))
         
@@ -252,7 +258,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         print(mu)
         cat("\n")
-        print(table(uni_cell_types))
+        print(table(uni_cell_types)[colnames(Signature)])
         cat("\n")
     }
     
