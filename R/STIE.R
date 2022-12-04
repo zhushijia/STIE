@@ -69,7 +69,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         rownames(mu) = rownames(sigma) = colnames(Signature)
         colnames(mu) = colnames(sigma) = features
         
-        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x) ) ) )
+        coefs = t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x), scaled=FALSE ) ) )
+        PE_on_spot = t( apply(coefs, 1, function(x) x/sum(x)) )
         
         for(t in 1:nrow(mu))
         {
@@ -92,7 +93,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         rownames(mu) = rownames(sigma) = colnames(Signature)
         colnames(mu) = colnames(sigma) = features
         
-        PE_on_spot = t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x) ) ) )
+        coefs =     t( apply( ST_expr2, 2, function(x) solveNNLS( Signature, as.matrix(x), scaled=FALSE ) ) )
+        PE_on_spot = t( apply(coefs, 1, function(x) x/sum(x)) )
         
         for(t in 1:nrow(mu))
         {
@@ -224,11 +226,18 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
             PE_on_spot_i = PE_on_spot[i,]
             #PM_on_spot_i = PM_on_spot[i,]
             PqM_on_spot_i = (PM_on_spot[i,]*q_theta) / sum(PM_on_spot[i,]*q_theta)
-            update_expression_regression_parameter(Signature, 
-                                                   Expr_on_spot_i, PE_on_spot_i, 
-                                                   PqM_on_spot_i, lambda = lambda, 
-                                                   scaled=F, kfold=10 )
+            
+            coef_i = coefs[i,]
+            tryCatch( { coef_i <- update_expression_regression_parameter(Signature, 
+                                                                        Expr_on_spot_i, PE_on_spot_i, 
+                                                                        PqM_on_spot_i, lambda = lambda, 
+                                                                        scaled=F, kfold=10 ) } 
+                      , warning = function(w) { print(w); print( paste0( rownames(PE_on_spot)[i], ": not updated") ) 
+                } )
+            coef_i
         }))
+        
+        
         
         PE_on_spot_ = t( apply(coefs, 1, function(x) x/sum(x)) )
         rownames(coefs) = rownames(PE_on_spot)
@@ -290,5 +299,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
     
     return(result)
 }
+
+
 
 

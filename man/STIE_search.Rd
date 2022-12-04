@@ -7,7 +7,7 @@
 STIE_search(ST_expr, Signature, cells_on_spot, steps = 30,
   morphology_steps = ceiling(steps/3), known_signature = TRUE,
   known_cell_types = FALSE, min_cells = 2, lambdas = c(0, 1000,
-  1e+06), features_of_interest = c("size", "shape", "angle"),
+  1e+06), features_of_interest = c("size", "shape"),
   criterion = c("L2sum", "rmse", "logLik"), plot = TRUE)
 }
 \arguments{

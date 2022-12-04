@@ -40,7 +40,7 @@
 STIE_search <- function(ST_expr, Signature, cells_on_spot, 
                         steps=30, morphology_steps=ceiling(steps/3),
                         known_signature=TRUE, known_cell_types=FALSE, min_cells=2,
-                        lambdas=c(0,1e3,1e6), features_of_interest = c("size", "shape", "angle"),
+                        lambdas=c(0,1e3,1e6), features_of_interest = c("size", "shape"),
                         criterion = c("L2sum","rmse", "logLik") , 
                         plot=TRUE) {
     
@@ -129,8 +129,10 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
         par(mfrow=c(2,2))
         par(mar=c(2,2,2,2))
         plot_searchPath(paths)
-        plot_pathScore( lapply(paths,function(x)x$logLik), name='logLik')
+        #plot_pathScore( lapply(paths,function(x)x$logLik), name='logLik')
         plot_pathScore( lapply(paths,function(x)x$logLikMorph), name='logLik_Morph')
+        boxplot( lapply(paths, function(x) sapply(x$scores, function(y) y$L2sum) ), main='L2sum')
+        boxplot( lapply(paths, function(x) x$logLikMorph), main='logLik_Morph')
     }
     
     paths
