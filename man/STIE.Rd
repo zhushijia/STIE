@@ -7,7 +7,7 @@
 STIE(ST_expr, Signature, cells_on_spot, features, lambda = 0,
   steps = 30, morphology_steps = ceiling(steps/3),
   known_signature = TRUE, known_cell_types = FALSE, min_cells = 2,
-  equal_prior = FALSE)
+  equal_prior = TRUE)
 }
 \arguments{
 \item{ST_expr}{a matrix of gene expression representing the spot level gene expression, with row being the spot and column being the gene}
