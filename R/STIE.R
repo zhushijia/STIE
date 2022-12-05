@@ -12,6 +12,7 @@
 #' @param known_signature a boolean value representing whether the transcriptomic signature is given. If TRUE, STIE performs single cell deconvolution
 #' @param known_cell_types a boolean value representing whether the cell typing is given. If TRUE, STIE will perform cell type signature learning
 #' @param min_cells  a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated
+#' @param equal_prior  a boolean value representing the wheter or not assume equal prior, i.e., P(q|theta)
 #' 
 #'
 #' @return A list containing the follow components:
@@ -38,7 +39,8 @@
 #' 
 STIE <- function(ST_expr, Signature, cells_on_spot, features, 
                  lambda=0, steps=30, morphology_steps=ceiling(steps/3),
-                 known_signature=TRUE, known_cell_types=FALSE, min_cells=2)
+                 known_signature=TRUE, known_cell_types=FALSE, 
+                 min_cells=2, equal_prior=FALSE)
 {
     
     #cl <- makeCluster( detectCores() )
@@ -171,6 +173,8 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         count_cell_types = table(uni_cell_types)
         filtered = which( colnames(Signature) %in% names(count_cell_types)[count_cell_types > min_cells] )
         
+        if(length(filtered)==1) break()
+        
         if( length(filtered)<ncol(Signature) )
         {
             mu = as.matrix(mu_[filtered, ])
@@ -215,9 +219,13 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         ########### 
         cat( "   updating expression regression parameter ... \n" ) 
         
-        ## for P(q|M) = 
-        q_theta = colSums(PME_on_cell)/sum(PME_on_cell)
-        q_theta = q_theta[colnames(PM_on_spot)]
+        ## for P(q|theta) 
+        if(equal_prior) {
+            q_theta = rep(1/ncol(Signature), ncol(Signature))
+        } else {
+            q_theta = colSums(PME_on_cell)/sum(PME_on_cell)
+            q_theta = q_theta[colnames(PM_on_spot)]
+        }
         
         #ccoefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
         coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
@@ -232,12 +240,10 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
                                                                         Expr_on_spot_i, PE_on_spot_i, 
                                                                         PqM_on_spot_i, lambda = lambda, 
                                                                         scaled=F, kfold=10 ) } 
-                      , warning = function(w) { print(w); print( paste0( rownames(PE_on_spot)[i], ": not updated") ) 
-                } )
+                      , warning = function(w) { print(w); print( paste0( rownames(PE_on_spot)[i], ": not updated") ) }
+                      , error = function(e) { print(e); print( paste0( rownames(PE_on_spot)[i], ": not updated") ) } )
             coef_i
         }))
-        
-        
         
         PE_on_spot_ = t( apply(coefs, 1, function(x) x/sum(x)) )
         rownames(coefs) = rownames(PE_on_spot)

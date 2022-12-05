@@ -12,6 +12,7 @@
 #' @param known_cell_types a boolean value representing whether the cell typing is given. If TRUE, STIE will perform cell type signature learning
 #' @param min_cells  a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated
 #' @param lambdas a vector of numeric value representing the shrinkage penalty of nuclear morphology
+#' @param equal_prior  a boolean value representing the wheter or not assume equal prior, i.e., P(q|theta)
 #' @param plot a boolean value representing whether to plot the result
 #' 
 #'
@@ -39,7 +40,7 @@
 #' 
 STIE_search <- function(ST_expr, Signature, cells_on_spot, 
                         steps=30, morphology_steps=ceiling(steps/3),
-                        known_signature=TRUE, known_cell_types=FALSE, min_cells=2,
+                        known_signature=TRUE, known_cell_types=FALSE, min_cells=2, equal_prior=FALSE,
                         lambdas=c(0,1e3,1e6), features_of_interest = c("size", "shape"),
                         criterion = c("L2sum","rmse", "logLik") , 
                         plot=TRUE) {
@@ -72,7 +73,8 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
         result1 = lapply( features_of_interest, function(cf) 
             STIE(ST_expr, Signature, cells_on_spot2, features=cf, 
                  lambda=lai, steps=steps, 
-                 known_signature=known_signature, known_cell_types=known_cell_types) )
+                 known_signature=known_signature, known_cell_types=known_cell_types,
+                 min_cells=min_cells, equal_prior=equal_prior) )
         score1 = lapply(result1, function(result) get_summary(result,ST_expr) )
         names(score1) = names(result1) = features_of_interest
         
@@ -94,7 +96,8 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
             for(j in 2:length(features_of_interest)) {
                 results[[j]] = STIE(ST_expr, Signature, cells_on_spot2, features=features_of_interest[ord1[1:j]], 
                                     lambda=lai, steps=steps, 
-                                    known_signature=known_signature, known_cell_types=known_cell_types)
+                                    known_signature=known_signature, known_cell_types=known_cell_types,
+                                    min_cells=min_cells, equal_prior=equal_prior )
                 scores[[j]] = get_summary(results[[j]], ST_expr)
                 names(results)[j] = names(scores)[j] = paste(features_of_interest[ord1[1:j]],collapse="+")
             }
