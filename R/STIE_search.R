@@ -49,20 +49,25 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
     
     features_list <- list( size = c("Area", 'Major', 'Minor', 'Width', 'Height', 'Feret','Perim.'),
                            shape = c("Round", 'Circ.'), 
-                           angle = c('FeretAngle','Angle') )
-    
-    features_list <- list( size = c("Area", 'Major', 'Minor', 'Width', 'Height', 'Feret','Perim.'),
-                           shape = c("Round", 'Circ.'), 
                            angle = c('FeretAngle','Angle'),
                            solidity = c("Solidity") )
     
-    PCs <- do.call(cbind, lapply( features_list, function(f) {
-        X = cells_on_spot[,f]
-        X2 = scale(X)
-        prcomp(X2)$x[,1]
-    }))
+    if(any( names(features_list) %in% features_of_interest )) {
+        PCs <- do.call(cbind, lapply(features_list, function(f) {
+            X = cells_on_spot[, f]
+            X2 = scale(X)
+            prcomp(X2)$x[, 1]
+        }))
+        
+        cells_on_spot2 <- cbind(cells_on_spot, PCs)
+        
+    } else {
+        
+        cells_on_spot2 <- cells_on_spot
+    }
     
-    cells_on_spot2 <- cbind(cells_on_spot,PCs)
+    features_of_interest = intersect(features_of_interest, colnames(cells_on_spot2))
+    stopifnot( length(features_of_interest)>0  )
     
     paths <- list()
     
@@ -172,7 +177,7 @@ plot_pathScore <- function(score,name=NULL)
     ylim = range(do.call(c,score))
     ylim = c( ylim[1], ylim[1] + 1.5*(ylim[2]-ylim[1]) )
     plot(NA, xlim=c(0.5,f+1), ylim=ylim, 
-         xlab="# Features", ylab='RMSE', main=paste0(name,': Features & Lambda'), 
+         xlab="# Features", ylab=name, main=paste0(name,': Features & Lambda'), 
          axes = FALSE) #xaxt="n", yaxt="n" )
     axis(1, at = c(1:f))
     axis(2)
