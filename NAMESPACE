@@ -2,6 +2,7 @@
 
 export(STIE)
 export(STIE_search)
+export(STIE_search0)
 export(calculate_cell_dist)
 export(calculate_morphology_probability)
 export(calculate_spot_radius)

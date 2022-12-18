@@ -38,7 +38,7 @@
 #' @seealso \code{\link{get_cells_on_spot}}; \code{\link{split_image}}; \code{\link{run_imageJ_plugin}}; \code{\link{merge_feature}};
 #' 
 #' 
-STIE_search <- function(ST_expr, Signature, cells_on_spot, 
+STIE_search0 <- function(ST_expr, Signature, cells_on_spot, 
                         steps=30, morphology_steps=ceiling(steps/3),
                         known_signature=TRUE, known_cell_types=FALSE, min_cells=2, equal_prior=TRUE,
                         lambdas=c(0,1e3,1e6), features_of_interest = c("size", "shape"),
@@ -49,7 +49,8 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
     
     features_list <- list( size = c("Area", 'Major', 'Minor', 'Width', 'Height', 'Feret','Perim.'),
                            shape = c("Round", 'Circ.'), 
-                           angle = c('FeretAngle','Angle') )
+                           angle = c('FeretAngle','Angle'),
+                           solidity = c("Solidity") )
     
     if(any( names(features_list) %in% features_of_interest )) {
         PCs <- do.call(cbind, lapply(features_list, function(f) {
@@ -121,8 +122,8 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
         }
         
         paths[[i]] = list( ordered_features=names(result1), 
-                           results = results, scores = scores,
-                           results_ord1 = result1, scores_ord1 = score1,
+                           results = results, 
+                           scores = scores,
                            values = sapply(scores,function(x)x[[criterion]]),
                            logLik = sapply(scores,function(x)x$logLik),
                            logLikMorph = sapply(scores,function(x) mean(x$logLik_Morp) ),
