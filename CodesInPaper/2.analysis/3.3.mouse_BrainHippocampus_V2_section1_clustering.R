@@ -1,0 +1,30 @@
+source( "/archive/SCCC/Hoshida_lab/s184554/Code/github/STIE/CodesInPaper/parameters/parameters_10X_V2_mouse_hippo_section1.R")
+cells_on_spot <- get_cells_on_spot( cell_coordinates=morphology_fts, spot_coordinates, 2.5*spot_radius)
+############################################################
+## run deconvolution
+############################################################
+k = 5
+pc = prcomp(ST_expr)$x[,1:10]
+set.seed(1234)
+cluster = kmeans(pc,k)$cluster
+Signature_ = t(apply(ST_expr, 2, function(x) tapply(x,cluster,mean) ))
+
+result = STIE(ST_expr, Signature_, cells_on_spot, features=c('shape'),
+              steps=30, known_signature=FALSE, known_cell_types=FALSE, 
+              min_cells=5, lambda=0 )
+############################################################
+## plot 
+############################################################
+cell_types = result$cell_types
+contour2 = cell_info$cell_contour[ match(names(cell_types), names(cell_info$cell_contour)) ]
+colors = c("green", "black", "magenta", "orange", "blue", "green")
+plot_sub_image(im=im, w=9000, h=5000, xoff=15500, yoff=11500,
+               x_scale=0.2, spot_coordinates=spot_coordinates, 
+               contour=contour2, cell_types=cell_types, color_use=colors, plot_spot=F, plot_cell=T)
+
+spot_col = colors[ cluster ]
+plot_sub_image(im=im, w=9000, h=5000, xoff=15500, yoff=11500,
+               x_scale=x_scale, spot_coordinates=spot_coordinates, 
+               spot_col=spot_col, fill_spot=T,
+               plot_spot=T, plot_cell=F  )
+

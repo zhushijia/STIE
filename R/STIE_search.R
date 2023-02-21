@@ -133,13 +133,19 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
     }
     
     if(plot) {
-        par(mfrow=c(2,2))
-        par(mar=c(2,2,2,2))
-        plot_searchPath(paths)
-        #plot_pathScore( lapply(paths,function(x)x$logLik), name='logLik')
-        plot_pathScore( lapply(paths,function(x)x$logLikMorph), name='logLik_Morph')
-        boxplot( lapply(paths, function(x) sapply(x$scores, function(y) y$L2sum) ), main='L2sum')
-        boxplot( lapply(paths, function(x) x$logLikMorph), main='logLik_Morph')
+        par(mfrow=c(1,3))
+        plot_pathScore(lapply(paths, function(x) sapply(x$scores, function(y) mean(sqrt(y$mse)) ) ), name='RMSE_Expr')
+        plot_pathScore( lapply(paths,function(x) x$logLikMorph), name='logLik_Morph')
+        plot.new()
+        n = length(paths)
+        cols = get_my_colors(n, mode=2)
+        legend( 'topleft', 
+                legend = c( "shape", "size", paste0('la=',names(score)) ), 
+                col = c('black', 'black', cols ), 
+                lty = c(NA, NA, rep(1,n)), 
+                pch = c( 17, 16, rep(NA,n) ),
+                lwd=1.5, cex=1.2,
+                bty = "n")
     }
     
     paths
@@ -163,12 +169,12 @@ plot_searchPath <- function(paths)
     axis(2)
     for( i in 1:n ) lines(best_val[[i]],col=i)
     for( i in 1:n ) points(best_val[[i]])
-    for( i in 1:n ) points(which.min(best_val[[i]]), min(best_val[[i]]), col=i, pch=8, cex=1.5 )
+    #for( i in 1:n ) points(which.min(best_val[[i]]), min(best_val[[i]]), col=i, pch=8, cex=1.5 )
     for( i in 1:n ) text(1:f,best_val[[i]],names(best_val[[i]]),pos=3)
     legend( 'topright', legend=paste0('lambda=',names(best_val)), col=1:n, lty=1, bty = "n")
 }
 
-plot_pathScore <- function(score,name=NULL)
+plot_pathScore0 <- function(score,name=NULL)
 {
     par(mar=c(2,2,2,2))
     n = length(score)
@@ -188,4 +194,30 @@ plot_pathScore <- function(score,name=NULL)
 }
 
 
+plot_pathScore <- function(score,name=NULL)
+{
+    par(mar=c(2,2,2,2))
+    n = length(score)
+    f = length(score[[1]])
+    ylim = range(do.call(c,score))
+    ylim = c( ylim[1], ylim[1] + 1.1*(ylim[2]-ylim[1]) )
+    plot(NA, xlim=c(0.5,f+1), ylim=ylim, 
+         xlab="# Features", ylab=name, main=name, 
+         axes = FALSE) #xaxt="n", yaxt="n" )
+    axis(1, at = c(1:f))
+    axis(2)
+    cols = get_my_colors(length(score), mode=2)
+    
+    pchs = lapply( 1:n, function(i) {
+        tmp = rep(15,2)
+        tmp[1] = ifelse( names(score[[i]])[1] == 'shape',17, 16 )
+        tmp
+    })
+    
+    for( i in n:1 ) lines( (1:f)+(i-3)*0.05, score[[i]], lwd=2 ,col=cols[i], type='b', cex=0)
+    for( i in n:1 ) points( (1:f)+(i-3)*0.05, score[[i]], pch=pchs[[i]], cex=2 ,col=cols[i] )
+    #for( i in 1:n ) points(which.min(score[[i]]), min(score[[i]]), col=i, pch=8, cex=1.5 )
+    #for( i in 1:n ) text(1:f,score[[i]],names(score[[i]]),pos=3)
+    #legend( 'topright', legend=paste0('lambda=',names(score)), col=1:n, lty=1, bty = "n")
+}
 

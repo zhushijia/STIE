@@ -11,7 +11,6 @@
 #' }
 #' 
 #' @author Shijia Zhu, \email{shijia.zhu@@utsouthwestern.edu}
-#' @export
 #'
 #' @references
 #'
