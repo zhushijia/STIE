@@ -43,12 +43,6 @@ http://cran.fhcrc.org/
 git clone https://github.com/zhushijia/STIE.git
 R CMD INSTALL -l userFolder STIE
 ```
-Alternatively, use [devtools](https://github.com/hadley/devtools) package
-```
-> install.packages("devtools")
-> library(devtools)
-> install_github("zhushijia/STIE")
-```
 
 
 ## Tutorial
