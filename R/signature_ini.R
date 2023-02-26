@@ -1,4 +1,6 @@
-#' signature_ini assign initial values of transcriptomic signature for STIE clustering
+#' signature_ini 
+#' 
+#' signature_ini assigns initial values of transcriptomic signature for STIE clustering
 #'
 #' @param k integer value indicating the number of clusters
 #' @param ST_expr a matrix of gene expression representing the spot level gene expression, with row being the spot and column being the gene

@@ -11,8 +11,9 @@
 #' @param morphology_steps an integer value representing the number of iterative steps of updating mophological model before updating gene expression model
 #' @param known_signature a boolean value representing whether the transcriptomic signature is given. If TRUE, STIE performs single cell deconvolution
 #' @param known_cell_types a boolean value representing whether the cell typing is given. If TRUE, STIE will perform cell type signature learning
-#' @param min_cells  a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated
-#' @param equal_prior  a boolean value representing the wheter or not assume equal prior, i.e., P(q|theta)
+#' @param min_cells a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated
+#' @param equal_prior a boolean value representing wheter or not assume equal prior, i.e., P(q|theta)
+#' @param verbose a boolean value representing wheter or not to print the running information
 #' 
 #'
 #' @return A list containing the follow components:
@@ -40,7 +41,7 @@
 STIE <- function(ST_expr, Signature, cells_on_spot, features, 
                  lambda=0, steps=30, morphology_steps=ceiling(steps/3),
                  known_signature=TRUE, known_cell_types=FALSE, 
-                 min_cells=2, equal_prior=TRUE)
+                 min_cells=2, equal_prior=TRUE, verbose=F)
 {
     
     #cl <- makeCluster( detectCores() )
@@ -139,10 +140,10 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         step = step+1
         t0 = t1
-        cat( "step:", step, paste0("(lambda=",lambda,")"),"##########\n" )
+        if(verbose) cat( "step:", step, paste0("(lambda=",lambda,")"),"##########\n" )
         
         ########### 
-        cat( "   recalculate PE and PM ... \n")
+        if(verbose) cat( "   recalculate PE and PM ... \n")
         
         mu = mu_
         sigma = sigma_
@@ -211,13 +212,13 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         ###########  
         if(step>morphology_steps)
         {
-            cat( "   updating morphology parameter ... \n")
+            if(verbose) cat( "   updating morphology parameter ... \n")
             morphology_parameter <- update_morphology_parameter(PE_on_spot, PM_on_cell, cells_on_spot, features)
             mu_ = morphology_parameter$mu
             sigma_ = morphology_parameter$sigma
         }
         ########### 
-        cat( "   updating expression regression parameter ... \n" ) 
+        if(verbose) cat( "   updating expression regression parameter ... \n" ) 
         
         ## for P(q|theta) 
         if(equal_prior) {
@@ -267,14 +268,17 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         PE_tah = sum( abs(PE_on_spot_ - PE_on_spot) )/nrow(PE_on_spot)
         PM_tah = sum( abs(mu_ - mu) )/nrow(mu)
         
-        t1 = Sys.time()
-        print(t1-t0)
-        cat("--> PE diff:", PE_tah, ", and PM diff:", PM_tah, ", and Sig diff:", Sig_tah, "\n\n")
+        if(verbose) {
+            t1 = Sys.time()
+            print(t1-t0)
+            
+            cat("--> PE diff:", PE_tah, ", and PM diff:", PM_tah, ", and Sig diff:", Sig_tah, "\n\n")
+            print(mu)
+            cat("\n")
+            print(table(uni_cell_types)[colnames(Signature)])
+            cat("\n")
+        }
         
-        print(mu)
-        cat("\n")
-        print(table(uni_cell_types)[colnames(Signature)])
-        cat("\n")
     }
     
     

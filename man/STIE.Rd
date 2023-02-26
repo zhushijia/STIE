@@ -7,7 +7,7 @@
 STIE(ST_expr, Signature, cells_on_spot, features, lambda = 0,
   steps = 30, morphology_steps = ceiling(steps/3),
   known_signature = TRUE, known_cell_types = FALSE, min_cells = 2,
-  equal_prior = TRUE)
+  equal_prior = TRUE, verbose = F)
 }
 \arguments{
 \item{ST_expr}{a matrix of gene expression representing the spot level gene expression, with row being the spot and column being the gene}
@@ -30,7 +30,9 @@ STIE(ST_expr, Signature, cells_on_spot, features, lambda = 0,
 
 \item{min_cells}{a boolean value representing the minimum number of cells to keep for each cell type. If the cell count is smaller than min_cells, the cell type will be eliminated}
 
-\item{equal_prior}{a boolean value representing the wheter or not assume equal prior, i.e., P(q|theta)}
+\item{equal_prior}{a boolean value representing wheter or not assume equal prior, i.e., P(q|theta)}
+
+\item{verbose}{a boolean value representing wheter or not to print the running information}
 }
 \value{
 A list containing the follow components:

@@ -2,7 +2,7 @@
 % Please edit documentation in R/signature_ini.R
 \name{signature_ini}
 \alias{signature_ini}
-\title{signature_ini assign initial values of transcriptomic signature for STIE clustering}
+\title{signature_ini}
 \usage{
 signature_ini(k, ST_expr = NULL, cells_on_spot = NULL, on = c("expr",
   "morph"), features = c("size", "shape"), pc_n = 10,
@@ -27,7 +27,7 @@ signature_ini(k, ST_expr = NULL, cells_on_spot = NULL, on = c("expr",
 a matrix of gene expression representing the cell type transcriptomic signature, with row being the gene and column being the cell type
 }
 \description{
-signature_ini assign initial values of transcriptomic signature for STIE clustering
+signature_ini assigns initial values of transcriptomic signature for STIE clustering
 }
 \examples{
 Signature_ = signature_ini(k=5, ST_expr=ST_expr, on="expr")

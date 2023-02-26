@@ -2,7 +2,7 @@
 % Please edit documentation in R/rescue_missing_cells.R
 \name{rescue_missing_cells}
 \alias{rescue_missing_cells}
-\title{rescue_missing_cells identify cell types for the missing cells falling in gap area between spots based on the learned STIE model}
+\title{rescue_missing_cells}
 \usage{
 rescue_missing_cells(STIE_result, cells_on_spot_new,
   merge_STIE_result = TRUE)
