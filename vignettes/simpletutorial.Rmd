@@ -2,6 +2,7 @@
 title: "An example of the STIE single-cell level deconvolution and clustering"
 author: "Shijia Zhu (shijia.zhu@UTSouthwestern.edu)"
 date: "`r Sys.Date()`"
+#output: pdf_document
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
@@ -64,10 +65,13 @@ nn
 
 # spot coordiantes 
 head(spot_coordinates,3)
+
 # spot-level gene expression
 head(ST_expr[,1:10],3)
+
 # nuclear coordinates and nuclear morphology
 head(morphology_fts,3)
+
 # cell-type transcriptomic signature
 head(Signature,3)
 ```
