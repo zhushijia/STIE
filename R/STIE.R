@@ -182,6 +182,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
             sigma = as.matrix(sigma_[filtered, ])
             colnames(mu) = colnames(sigma) = features
             Signature = Signature_[ ,filtered]
+            coefs = coefs[ ,filtered]
             PE_on_spot = t( apply(PE_on_spot_[ ,filtered], 1, function(x) x/sum(x)) )
             PM_on_cell = calculate_morphology_probability(cells_on_spot, features, mu, sigma )
             PE_on_cell = PE_on_spot[ match(spot_id,rownames(PE_on_spot)) ,  ]
@@ -230,7 +231,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         #ccoefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
         coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
-            #cat(i,"\n")
+            cat(i,"\n")
             Expr_on_spot_i = as.matrix( ST_expr2[,i] )
             PE_on_spot_i = PE_on_spot[i,]
             #PM_on_spot_i = PM_on_spot[i,]
@@ -238,7 +239,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
             
             coef_i = coefs[i,]
             tryCatch( { coef_i <- update_expression_regression_parameter(Signature, 
-                                                                        Expr_on_spot_i, PE_on_spot_i, 
+                                                                        Expr_on_spot_i, coef_i, # PE_on_spot_i, 
                                                                         PqM_on_spot_i, lambda = lambda, 
                                                                         scaled=F, kfold=10 ) } 
                       , warning = function(w) { print(w); print( paste0( rownames(PE_on_spot)[i], ": not updated") ) }
@@ -302,6 +303,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
                    PE_on_spot = PE_on_spot,
                    PM_on_cell = PM_on_cell,
                    PME_uni_cell = PME_uni_cell, 
+                   coefs = coefs,
                    cell_types=cell_types,
                    uni_cell_types=uni_cell_types,
                    Signature=Signature,

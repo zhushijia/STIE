@@ -36,11 +36,16 @@ update_expression_regression_parameter <- function( Signature, Expr_on_spot_i,
         # PM_on_spot_i is the probability of morphology for cell type
         # lambda is the langurange multiplier
         
+        s2 = var( as.numeric(Expr_on_spot_i) - Signature%*%as.numeric(PE_on_spot_i) )
+        s2 = 1
+        lambda_ = as.numeric( lambda*s2/sum(PE_on_spot_i)^2 )
+        cat("lambda_:", lambda_, s2, "\n")
+        
         t <- ncol(Signature)
         I <- diag(t)
         
-        D <- t(Signature)%*%Signature + lambda*I
-        d <- t(Signature)%*%Expr_on_spot_i + lambda*sum(PE_on_spot_i)*I%*%PM_on_spot_i
+        D <- t(Signature)%*%Signature + lambda_*I
+        d <- t(Signature)%*%Expr_on_spot_i + lambda_*sum(PE_on_spot_i)*I%*%PM_on_spot_i
         A <- I
         bzero <- c(rep(0,t))
         solution <- solve.QP(D,d,A)$solution
