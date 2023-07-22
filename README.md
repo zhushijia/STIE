@@ -46,7 +46,7 @@ R CMD INSTALL -l userFolder STIE
 
 
 ## Tutorial
-   See our [wiki](https://github.com/zhushijia/STIE/wiki)
+   See our [Wiki (long)](https://github.com/zhushijia/STIE/wiki); [Vignette (short)](https://github.com/zhushijia/STIE/blob/main/vignettes/Vignette.pdf); and [NucleusSegmentation](https://github.com/zhushijia/STIE/wiki/Nucleus-segmentation)
 
 ## Citation
  [(link)](asdfads)
