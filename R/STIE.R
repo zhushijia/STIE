@@ -231,7 +231,7 @@ STIE <- function(ST_expr, Signature, cells_on_spot, features,
         
         #ccoefs = do.call(rbind, foreach( i=1:nrow(PE_on_spot), .packages=c("quadprog","STIE")) %dopar% {
         coefs = do.call(rbind, lapply( 1:nrow(PE_on_spot), function(i) {
-            cat(i,"\n")
+            #cat(i,"\n")
             Expr_on_spot_i = as.matrix( ST_expr2[,i] )
             PE_on_spot_i = PE_on_spot[i,]
             #PM_on_spot_i = PM_on_spot[i,]
