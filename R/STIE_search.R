@@ -140,7 +140,7 @@ STIE_search <- function(ST_expr, Signature, cells_on_spot,
         n = length(paths)
         cols = get_my_colors(n, mode=2)
         legend( 'topleft', 
-                legend = c( "shape", "size", paste0('la=',names(score)) ), 
+                legend = c( "shape", "size", paste0('la=',names(paths)) ), 
                 col = c('black', 'black', cols ), 
                 lty = c(NA, NA, rep(1,n)), 
                 pch = c( 17, 16, rep(NA,n) ),
