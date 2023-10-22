@@ -36,13 +36,6 @@ update_expression_regression_parameter <- function( Signature, Expr_on_spot_i,
         # PM_on_spot_i is the probability of morphology for cell type
         # lambda is the langurange multiplier
         
-        if(0) {
-            s2 = var( as.numeric(Expr_on_spot_i) - Signature%*%as.numeric(PE_on_spot_i) )
-            s2 = 1
-            lambda_ = as.numeric( lambda*s2/sum(PE_on_spot_i)^2 )
-            cat("lambda_:", lambda_, s2, "\n")
-        }
-        
         lambda_ = as.numeric( lambda/sum(PE_on_spot_i)^2 )
         
         t <- ncol(Signature)
