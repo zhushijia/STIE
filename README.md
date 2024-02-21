@@ -49,4 +49,4 @@ R CMD INSTALL -l userFolder STIE
    See our [Wiki (long)](https://github.com/zhushijia/STIE/wiki); [Vignette (short)](https://github.com/zhushijia/STIE/blob/main/vignettes/Vignette.pdf); and [NucleusSegmentation](https://github.com/zhushijia/STIE/wiki/Nucleus-segmentation)
 
 ## Citation
- STIE: Single-cell level deconvolution, convolution, and clustering in spatial transcriptomics by aligning spot level transcriptome to nuclear morphology [(bioRxiv)](https://www.biorxiv.org/content/10.1101/2023.12.17.572084v1)
+ STIE: Single-cell level deconvolution, convolution, and clustering in spatial transcriptomics by aligning spot level transcriptome to nuclear morphology [(preprint)](https://www.biorxiv.org/content/10.1101/2023.12.17.572084v1)
